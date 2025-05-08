@@ -3,6 +3,11 @@ import express from 'express'
 import dotenv from 'dotenv'
 import cors from 'cors';
 
+// Se importa las rutas
+import routerAdministrador from './routers/administrador_routes.js';
+
+import routerClientes from './routers/cliente_routes.js';
+
 // Inicializaciones
 const app = express()
 dotenv.config()
@@ -22,6 +27,12 @@ app.use(express.json())
 app.get('/',(req,res)=>{
     res.send("Server on")
 })
+
+// Ruta del administrador
+app.use('/api',routerAdministrador)
+
+// Ruta del cliente
+app.use('/api',routerClientes)
 
 
 // Rutas no encontradas
