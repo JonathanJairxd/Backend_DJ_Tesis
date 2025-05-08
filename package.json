@@ -1,0 +1,34 @@
+{
+  "name": "backend_dj_tesis",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Elaboración del backend para el funcionamiento de una pagina web y aplicación móvil, todo esto para un DJ",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JonathanJairxd/Backend_DJ_Tesis.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JonathanJairxd/Backend_DJ_Tesis/issues"
+  },
+  "homepage": "https://github.com/JonathanJairxd/Backend_DJ_Tesis#readme",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "cloudinary": "^2.6.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "express-validator": "^7.2.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.14.1",
+    "nodemailer": "^7.0.3"
+  }
+}
