@@ -1,6 +1,6 @@
 import Administrador from '../models/Administrador.js';
 import dotenv from 'dotenv'
-import {sendMailToRecoveryPassword } from "../config/nodemailer.js";
+import { sendMailToRecoveryPassword } from "../config/nodemailer.js";
 import generarJWT from "../helpers/crearJWT.js"
 import mongoose from 'mongoose';
 
@@ -27,6 +27,8 @@ const login = async (req, res) => {
                 email: process.env.ADMIN_EMAIL,
                 password: await new Administrador().encrypPassword(process.env.ADMIN_PASSWORD),
             });
+
+            await newAdmin.save();
             //Agregar token
             const token = generarJWT(newAdmin._id, "Administrador");
 
@@ -48,7 +50,7 @@ const login = async (req, res) => {
     }
 
     // Mostrar los datos del administrador autenticado
-    const token = generarJWT(administradorBDD._id,"Administrador")
+    const token = generarJWT(administradorBDD._id, "Administrador")
     const { nombre, apellido, direccion, telefono, _id, descripcion } = administradorBDD;
     res.status(200).json({
         token,
@@ -62,9 +64,8 @@ const login = async (req, res) => {
     })
 }
 
-const perfil =(req,res)=>{
+const perfil = (req, res) => {
     delete req.administradorBDD.token
-    delete req.administradorBDD.confirmEmail
     delete req.administradorBDD.createdAt
     delete req.administradorBDD.updatedAt
     delete req.administradorBDD.__v
@@ -74,16 +75,21 @@ const perfil =(req,res)=>{
 // Actualizar
 const actualizarPerfil = async (req, res) => {
     const { id } = req.params;
-    
-    if (!mongoose.Types.ObjectId.isValid(id)) 
+
+    if (!mongoose.Types.ObjectId.isValid(id))
         return res.status(404).json({ msg: `Lo sentimos, debe ser un ID válido` })
 
-    if (Object.values(req.body).includes("")) 
+    if (Object.values(req.body).includes(""))
         return res.status(400).json({ msg: "Lo sentimos, debes llenar todos los campos" })
 
+    if (!/^\d{10}$/.test(req.body.telefono)) {
+        return res.status(400).json({ msg: "El número de teléfono debe contener 10 digitos" });
+    }
+
+
     const administradorBDD = await Administrador.findById(id)
-    
-    if (!administradorBDD) 
+
+    if (!administradorBDD)
         return res.status(404).json({ msg: `Lo sentimos, no existe el administrador con ID ${id}` })
 
     if (administradorBDD.email !== req.body.email) {
@@ -99,28 +105,36 @@ const actualizarPerfil = async (req, res) => {
     administradorBDD.telefono = req.body.telefono || administradorBDD?.telefono
     administradorBDD.email = req.body.email || administradorBDD?.email
     administradorBDD.descripcion = req.body.descripcion || administradorBDD?.descripcion
-    
+
     await administradorBDD.save();
-    
+
     res.status(200).json({ msg: "Perfil actualizado correctamente" });
 }
 
 const actualizarPassword = async (req, res) => {
+
+    const { passwordactual, passwordnuevo } = req.body;
+
+    // Validar que se proporcionen ambas contraseñas
+    if (!passwordactual || !passwordnuevo) {
+        return res.status(400).json({ msg: "Por favor, ingrese tanto la contraseña actual como la nueva contraseña" });
+    }
+
     const administradorBDD = await Administrador.findById(req.administradorBDD._id);
-    
-    if (!administradorBDD) 
+
+    if (!administradorBDD)
         return res.status(404).json({ msg: `Lo sentimos, no existe el administrador con ID ${req.administradorBDD._id}` });
 
-    const verificarPassword = await administradorBDD.matchPassword(req.body.passwordactual);
-    
-    if (!verificarPassword) 
+    const verificarPassword = await administradorBDD.matchPassword(passwordactual);
+
+    if (!verificarPassword)
         return res.status(404).json({ msg: "Lo sentimos, el password actual no es el correcto" });
 
-    administradorBDD.password = await administradorBDD.encrypPassword(req.body.passwordnuevo);
-    
+    administradorBDD.password = await administradorBDD.encrypPassword(passwordnuevo);
+
     await administradorBDD.save();
-    
-    res.status(200).json({ msg: "Password actualizado correctamente" });
+
+    res.status(200).json({ msg: "Contraseña actualizado correctamente" });
 }
 
 // Recuperar contraseña
@@ -129,11 +143,11 @@ const recuperarPassword = async (req, res) => {
     const { email } = req.body
 
     // Validar campos vacios
-    if (Object.values(req.body).includes("")) 
+    if (Object.values(req.body).includes(""))
         return res.status(404).json({ msg: "Lo sentimos, debes llenar todos los campos" })
     //Validar si el correo existe en la base de datos
     const administradorBDD = await Administrador.findOne({ email })
-    if (!administradorBDD) 
+    if (!administradorBDD)
         return res.status(404).json({ msg: "Lo sentimos, el email es incorrecto" })
 
     // Interaccion con la base de datos
@@ -141,47 +155,46 @@ const recuperarPassword = async (req, res) => {
     administradorBDD.token = token
     await sendMailToRecoveryPassword(email, token, true)
     await administradorBDD.save()
-    
+
     res.status(200).json({ msg: "Revisa tu correo electrónico para restablecer tu cuenta" })
 }
 
 const comprobarTokenPasword = async (req, res) => {
 
     // Verificar que el token exista
-    if (!req.params.token) 
+    if (!req.params.token)
         return res.status(404).json({ msg: "Lo sentimos, no se puede validar la cuenta" })
 
     // Comprobar si el token es válido
     const administradorBDD = await Administrador.findOne({ token: req.params.token })
-    if (administradorBDD?.token !== req.params.token) 
+    if (administradorBDD?.token !== req.params.token)
         return res.status(404).json({ msg: "Lo sentimos, el token no es válido 12" })
 
     await administradorBDD.save()
-  
+
     res.status(200).json({ msg: "Token confirmado, ya puedes crear tu nuevo password" })
 }
 
 const nuevoPassword = async (req, res) => {
     const { password, confirmpassword } = req.body
     // Verificar campos vacios
-    if (Object.values(req.body).includes("")) 
+    if (Object.values(req.body).includes(""))
         return res.status(404).json({ msg: "Lo sentimos, debes llenar todos los campos" })
 
     // Confirmar si las contraseñas son iguales
-    if (password !== confirmpassword) 
+    if (password !== confirmpassword)
         return res.status(404).json({ msg: "Lo sentimos, las contraseñas no coinciden" })
 
     const AdministradorBDD = await Administrador.findOne({ token: req.params.token })
-    if (AdministradorBDD?.token !== req.params.token) 
+    if (AdministradorBDD?.token !== req.params.token)
         return res.status(404).json({ msg: "Lo sentimos, el token no es válido o ha expirado" })
 
     AdministradorBDD.token = null;
     AdministradorBDD.password = await AdministradorBDD.encrypPassword(password)
     await AdministradorBDD.save();
-    
+
     res.status(200).json({ msg: "Felicitaciones, ya puedes iniciar sesión con tu nuevo password" })
 }
-
 
 
 export {
