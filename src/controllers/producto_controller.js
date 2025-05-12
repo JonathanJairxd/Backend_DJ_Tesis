@@ -9,7 +9,7 @@ const registrarProducto = async (req, res) => {
 
     if (!imagen) {
         return res.status(400).json({ msg: "La imagen es obligatoria" })
-      }
+    }
 
     // Validar que no haya campos vacios
     if (Object.values(req.body).includes("")) {
@@ -39,15 +39,15 @@ const registrarProducto = async (req, res) => {
 
     // Guardar el producto en la base de datos
     await nuevoProducto.save()
-    console.log("Producto registrado: ",nuevoProducto)
+    console.log("Producto registrado: ", nuevoProducto)
 
     // Se responde con exito y los detalles del producto registrado 
-    res.status(200).json({ msg: "Producto registrado con éxito"})
+    res.status(200).json({ msg: "Producto registrado con éxito" })
 }
 
 const listarProducto = async (req, res) => {
     try {
-        const productos = await Producto.find().select("-createdAt -updatedAt -__v")
+        const productos = await Producto.find({stock: { $gt: 0 } }).select("-createdAt -updatedAt -__v")
         res.status(200).json(productos)
     } catch (error) {
         res.status(404).json({ msg: "Hubo un error al obtener la lista de productos" })
@@ -61,9 +61,9 @@ const detalleProducto = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(404).json({ msg: `Lo sentimos, no existe el producto con ID: ${id}` })
     }
-    
+
     // Buscar el producto en la base de datos
-    const producto = await Producto.findById(id).select("-createdAt -updatedAt -__v")
+    const producto = await Producto.findById(id, {stock: { $gt: 0 } }).select("-createdAt -updatedAt -__v")
 
     // // Verificar si el producto existe en la base de datos () si se encontro
     if (!producto) {
@@ -78,7 +78,7 @@ const detalleProducto = async (req, res) => {
 const actualizarProducto = async (req, res) => {
     const { id } = req.params
 
-    if (Object.values(req.body).includes("")) {
+    if (req.body && Object.values(req.body).includes("")) {
         return res.status(400).json({ msg: "Lo sentimos, debes llenar todos los campos" })
     }
 
@@ -95,11 +95,28 @@ const actualizarProducto = async (req, res) => {
 
     // {new:true} : indica a Mongoose que despues de actualizar un documento
     // devuelva la version mas reciente que se actualizo
-    await Producto.findByIdAndUpdate(id, req.body, { new: true })
+    // Solo actualiza los campos que llegaron en req.body
+    if (req.body) {
+        const { nombre, descripcion, precio } = req.body;
+
+        if ([nombre, descripcion, precio].includes("")) {
+            return res.status(400).json({ msg: "Debes llenar todos los campos" });
+        }
+
+        if (nombre) producto.nombre = nombre;
+        if (descripcion) producto.descripcion = descripcion;
+        if (precio) producto.precio = precio;
+    }
+
+    // Si hay una imagen nueva, actualiza la imagen
+    if (req.file) {
+        producto.imagen = req.file.path; // o filename : para que se vea el nombre de la imagen
+    }
+
+    await producto.save();
 
 
-    
-    res.status(200).json({ msg: "Producto actualizado con éxito"})
+    res.status(200).json({ msg: "Producto actualizado con éxito" })
 }
 
 const eliminarProducto = async (req, res) => {
@@ -117,7 +134,7 @@ const eliminarProducto = async (req, res) => {
     }
 
     // Se elimina el producto de la base de datos
-    await Producto.findByIdAndDelete(id)
+    producto.stock = 0
 
     res.status(200).json({ msg: "Producto eliminado exitosamente" })
 }

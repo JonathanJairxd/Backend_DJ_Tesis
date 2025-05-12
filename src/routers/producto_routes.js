@@ -9,7 +9,7 @@ const upload = multer({ storage })
 router.post('/producto/registro', upload.single('imagen'), registrarProducto)
 router.get('/producto/listar', listarProducto)
 router.get('/producto/detalle/:id',detalleProducto)
-router.put('/producto/actualizar/:id',actualizarProducto)
+router.put('/producto/actualizar/:id',upload.single('imagen'), actualizarProducto)
 router.delete('/producto/eliminar/:id',eliminarProducto)
 
 
