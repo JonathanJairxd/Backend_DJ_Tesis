@@ -4,6 +4,13 @@ import mongoose from "mongoose"
 const registrarProducto = async (req, res) => {
     const { nombreDisco, artista, precio, genero, stock } = req.body
 
+    //Para que se pueda pedir la imagen
+    const imagen = req.file?.path
+
+    if (!imagen) {
+        return res.status(400).json({ msg: "La imagen es obligatoria" })
+      }
+
     // Validar que no haya campos vacios
     if (Object.values(req.body).includes("")) {
         return res.status(400).json({ msg: "Lo sentimos, debes llenar todos los campos" })
@@ -26,7 +33,8 @@ const registrarProducto = async (req, res) => {
         artista,
         precio,
         genero,
-        stock
+        stock,
+        imagen
     })
 
     // Guardar el producto en la base de datos

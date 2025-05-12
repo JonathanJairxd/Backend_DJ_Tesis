@@ -24,6 +24,10 @@ const productoSchema = new Schema({
         type: Number,
         required: true,
         default: 0 // Valor por defecto en caso de que no haya stock
+    },
+    imagen: {
+        type: String,
+        required: true
     }
 }, {
     timestamps: true
