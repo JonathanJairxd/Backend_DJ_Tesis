@@ -63,11 +63,16 @@ const detalleProducto = async (req, res) => {
     }
 
     // Buscar el producto en la base de datos
-    const producto = await Producto.findById(id, {stock: { $gt: 0 } }).select("-createdAt -updatedAt -__v")
+    const producto = await Producto.findById(id).select("-createdAt -updatedAt -__v")
 
     // // Verificar si el producto existe en la base de datos () si se encontro
     if (!producto) {
         return res.status(404).json({ msg: `Producto con ID: ${id} no encontrado o ya fue eliminado` })
+    }
+
+    // Verifica si tiene stock o no
+    if (producto.stock <= 0) {
+        return res.status(404).json({ msg: `Producto con ID: ${id} no disponible` });
     }
 
     // Detalles del producto
@@ -97,7 +102,7 @@ const actualizarProducto = async (req, res) => {
     // devuelva la version mas reciente que se actualizo
     // Solo actualiza los campos que llegaron en req.body
     if (req.body) {
-        const { nombre, descripcion, precio } = req.body;
+        const { nombre, descripcion, precio, stock} = req.body;
 
         if ([nombre, descripcion, precio].includes("")) {
             return res.status(400).json({ msg: "Debes llenar todos los campos" });
@@ -106,6 +111,7 @@ const actualizarProducto = async (req, res) => {
         if (nombre) producto.nombre = nombre;
         if (descripcion) producto.descripcion = descripcion;
         if (precio) producto.precio = precio;
+        if (stock !== undefined) producto.stock = stock; 
     }
 
     // Si hay una imagen nueva, actualiza la imagen
@@ -113,8 +119,11 @@ const actualizarProducto = async (req, res) => {
         producto.imagen = req.file.path; // o filename : para que se vea el nombre de la imagen
     }
 
+
     await producto.save();
 
+    // alternativa:  Actualizar el producto con todos los datos del cuerpo de la solicitud (req.body)
+    //await Producto.findByIdAndUpdate(id, req.body, { new: true });
 
     res.status(200).json({ msg: "Producto actualizado con éxito" })
 }
@@ -130,11 +139,17 @@ const eliminarProducto = async (req, res) => {
     // Verificar si el producto existe en la base de datos (si ya fue eliminado)
     const producto = await Producto.findById(id);
     if (!producto) {
-        return res.status(404).json({ msg: `El producto con ID: ${id} ya ha sido eliminado` });
+        return res.status(404).json({ msg: `El producto con ID: ${id} no existe` });
+    }
+
+    if (producto.stock === 0) {
+        return res.status(200).json({ msg: `El producto con ID: ${id} ya ha sido eliminado` });
     }
 
     // Se elimina el producto de la base de datos
     producto.stock = 0
+
+    await producto.save();
 
     res.status(200).json({ msg: "Producto eliminado exitosamente" })
 }
