@@ -5,33 +5,61 @@ import generarJWT from "../helpers/crearJWT.js"
 
 
 const registrarCliente = async (req, res) => {
-    const { email } = req.body;
+    const { email, password} = req.body;
 
     // Validar que no haya campos vacíos
     if (Object.values(req.body).includes("")) {
         return res.status(400).json({ msg: "Lo sentimos, debes llenar todos los campos" })
     }
 
-    // Verificar si el email ya está registrado
+    // Obtener el usuario de la BDD en base al email
     const verificarEmailBDD = await Cliente.findOne({ email })
+    // Verificar si el email ya está registrado
     if (verificarEmailBDD) {
         return res.status(400).json({ msg: "Lo sentimos, el email ya se encuentra registrado" })
     }
 
     // Crear nuevo cliente
     const nuevoCliente = new Cliente(req.body);
-
-    // Generar contraseña aleatoria con prefijo "dj"
-    const password = Math.random().toString(36).slice(2);
-    nuevoCliente.password = await nuevoCliente.encrypPassword("dj" + password)
-
+    // Encriptar el password
+    nuevoCliente.password = await nuevoCliente.encrypPassword(password)
+   //Crear el token
+   const token = nuevoCliente.crearToken()
     // Enviar correo de bienvenida con la contraseña
-    await sendMailToCliente(email, "dj" + password)
+    await sendMailToCliente(email, token)
 
     // Guardar cliente en la base de datos
     await nuevoCliente.save()
 
-    res.status(200).json({ msg: "Su registro se ha completado con éxito. Por favor revise su correo" })
+    res.status(200).json({ msg: "Revisa tu correo electrónico para confirmar tu cuenta" })
+}
+
+const confirmarEmail = async(req, res)=>{
+
+    // Verificar si el token esta presente en los parametros de la URL
+    if(!req.params.token) {
+        return res.status(400).json({msg:"Lo sentimos, no se puede validar la cuenta"})
+    }
+    // Buscar el cliente en la base de datos usando el token recibido
+    const clienteBDD = await Cliente.findOne({token: req.params.token})
+
+    // Verificar si el token ya fue utilizado o no existe
+    if(!clienteBDD) {
+        return res.status(404).json({msg:"No se encontró un cliente con ese token"})
+    }
+    // Verificar si la cuenta ya está confirmada
+    if (clienteBDD.confirmarEmail) {
+        return res.status(400).json({ msg: "La cuenta ya ha sido confirmada" });
+    }
+    // Eliminar el token del cliente ya que ha sido validado
+    clienteBDD.token = null
+    // Marcar la cuenta como confirmada
+    clienteBDD.confirmarEmail=true
+
+    await clienteBDD.save()
+
+    res.status(200).json({msg:"Token confirmado, ya puedes iniciar sesión"}) 
+
 }
 
 const loginCliente = async (req, res) => {
@@ -283,11 +311,12 @@ const nuevoPassword = async (req, res) => {
 
 
 export {
+    registrarCliente,
+    confirmarEmail,
     loginCliente,
     perfilCliente,
     listarClientes,
     detalleCliente,
-    registrarCliente,
     actualizarCliente,
     eliminarCliente,
     recuperarPassword,

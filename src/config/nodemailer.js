@@ -37,17 +37,18 @@ const sendMailToRecoveryPassword = async (userMail, token, isAdmin = true) => {
 }
 
 // Validar la cuenta del cliente
-const sendMailToCliente = async (userMail, password) => {
+const sendMailToCliente = async (userMail, token) => {
     console.log("Correo a enviar: " ,userMail)
+
     let info = await transporter.sendMail({
         from: 'admin@djapp.com',
         to: userMail,
-        subject: "Correo de Bienvenida",
+        subject: "Correo de Confirmación de Cuenta",
         html: `
         <h1>¡Bienvenido a la plataforma de Edwin Dj 🎧🎶</h1>
         <hr>
-        <p>Tu contraseña de acceso: <strong>${password}</strong></p>
-        <a href=${process.env.URL_BACKEND}cliente/login>Haz clic aquí para iniciar sesión</a>
+        <p> ¡Gracias por registrate! Para activar tu cuenta, haz click en el siguiente enlace</p>
+        <a href=${process.env.URL_BACKEND}cliente/confirmar/${encodeURIComponent(token)}>Confirmar mi cuenta</a>
         <hr>
         <footer>🎵 ¡Disfruta de la mejor música con nosotros! 🎵</footer>
         `

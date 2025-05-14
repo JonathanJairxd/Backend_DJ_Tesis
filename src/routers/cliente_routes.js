@@ -1,9 +1,10 @@
 import { Router } from 'express';
-import { actualizarCliente, actualizarPassword, comprobarTokenPassword, detalleCliente, eliminarCliente, listarClientes, loginCliente, nuevoPassword, perfilCliente, recuperarPassword, registrarCliente } from '../controllers/cliente_controller.js';
+import { actualizarCliente, actualizarPassword, comprobarTokenPassword, confirmarEmail, detalleCliente, eliminarCliente, listarClientes, loginCliente, nuevoPassword, perfilCliente, recuperarPassword, registrarCliente } from '../controllers/cliente_controller.js';
 import verificarAutenticacion from '../middlewares/autenticacion.js';
 const router = Router()
 
 router.post('/cliente/registro', registrarCliente)
+router.get("/cliente/confirmar/:token", confirmarEmail)
 router.post('/cliente/login', loginCliente)
 router.get('/cliente/perfil', verificarAutenticacion ,perfilCliente)
 router.get('/cliente/listar', verificarAutenticacion, listarClientes)

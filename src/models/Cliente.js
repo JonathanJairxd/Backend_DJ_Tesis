@@ -42,7 +42,7 @@ const clienteSchema = new Schema({
         type:String,
         default:null
     },
-    confirmEmail: {
+    confirmarEmail: {
         type: Boolean,
         default: false
     }
