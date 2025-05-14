@@ -100,30 +100,14 @@ const actualizarProducto = async (req, res) => {
 
     // {new:true} : indica a Mongoose que despues de actualizar un documento
     // devuelva la version mas reciente que se actualizo
-    // Solo actualiza los campos que llegaron en req.body
-    if (req.body) {
-        const { nombre, descripcion, precio, stock} = req.body;
-
-        if ([nombre, descripcion, precio].includes("")) {
-            return res.status(400).json({ msg: "Debes llenar todos los campos" });
-        }
-
-        if (nombre) producto.nombre = nombre;
-        if (descripcion) producto.descripcion = descripcion;
-        if (precio) producto.precio = precio;
-        if (stock !== undefined) producto.stock = stock; 
-    }
 
     // Si hay una imagen nueva, actualiza la imagen
     if (req.file) {
         producto.imagen = req.file.path; // o filename : para que se vea el nombre de la imagen
     }
 
-
-    await producto.save();
-
-    // alternativa:  Actualizar el producto con todos los datos del cuerpo de la solicitud (req.body)
-    //await Producto.findByIdAndUpdate(id, req.body, { new: true });
+    // Actualizar el producto con los datos que se desee
+    await Producto.findByIdAndUpdate(id, { ...req.body, imagen: producto.imagen }, { new: true });
 
     res.status(200).json({ msg: "Producto actualizado con éxito" })
 }
