@@ -27,6 +27,11 @@ const clienteSchema = new Schema({
         required: true,
         trim: true
     },
+    provincia: {
+        type: String,
+        required: true,
+        trim: true
+    },
     ciudad: {
         type: String,
         required: true,

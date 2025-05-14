@@ -5,11 +5,16 @@ import generarJWT from "../helpers/crearJWT.js"
 
 
 const registrarCliente = async (req, res) => {
-    const { email, password} = req.body;
+    const { email, password, confirmarPassword} = req.body;
 
     // Validar que no haya campos vacíos
     if (Object.values(req.body).includes("")) {
         return res.status(400).json({ msg: "Lo sentimos, debes llenar todos los campos" })
+    }
+
+    // Verificar la contraseña añadida en el registro
+     if (password !== confirmarPassword) {
+        return res.status(400).json({ msg: "Las contraseñas no coinciden" });
     }
 
     // Obtener el usuario de la BDD en base al email
