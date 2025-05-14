@@ -1,5 +1,5 @@
 import Cliente from "../models/Cliente.js"
-import {sendMailToCliente, sendMailToRecoveryPassword } from "../config/nodemailer.js"
+import { sendMailToCliente, sendMailToRecoveryPassword } from "../config/nodemailer.js"
 import mongoose from "mongoose"
 import generarJWT from "../helpers/crearJWT.js"
 
@@ -38,9 +38,9 @@ const loginCliente = async (req, res) => {
     const { email, password } = req.body
 
     // Verificar que todos los campos estén llenos
-    if (Object.values(req.body).includes("")) 
+    if (Object.values(req.body).includes(""))
         return res.status(400).json({ msg: "Lo sentimos, debes llenar todos los campos" })
-    
+
 
     // Buscar al cliente en la base de datos
     const clienteBDD = await Cliente.findOne({ email });
@@ -56,7 +56,7 @@ const loginCliente = async (req, res) => {
 
     // Generar token JWT
     const token = generarJWT(clienteBDD._id, "Cliente")
-    
+
     // Extraer datos del cliente
     const { nombre, telefono, direccion, ciudad, _id } = clienteBDD;
 
@@ -74,9 +74,10 @@ const loginCliente = async (req, res) => {
 }
 
 const perfilCliente = (req, res) => {
-
+    // Verificar que el cliente con el id del token exista en la base de datos
+    // Se usa tambien para verificar el token de acuerdo al rol que le es permitido
     if (!req.clienteBDD) {
-        return res.status(404).json({ msg: "Cliente no encontrado" });
+        return res.status(404).json({ msg: "Acceso denegado. Solo los clientes pueden ver su propio perfil" });
     }
     delete req.clienteBDD.token
     delete req.clienteBDD.confirmEmail
@@ -88,6 +89,11 @@ const perfilCliente = (req, res) => {
 }
 
 const listarClientes = async (req, res) => {
+
+    if (!req.administradorBDD) {
+        return res.status(404).json({ msg: "Acceso denegado. Solo el administrador puede listar clientes" });
+    }
+
     try {
         const clientes = await Cliente.find({ status: true }).select("-createdAt -updatedAt -__v -password -token -confirmEmail -direccion -ciudad")
 
@@ -97,76 +103,119 @@ const listarClientes = async (req, res) => {
     }
 }
 
-const detalleCliente = async(req,res)=>{
-    const {id} = req.params
+const detalleCliente = async (req, res) => {
+
+    if (!req.administradorBDD) {
+        return res.status(404).json({ msg: "Acceso denegado. Solo el administrador puede detallar clientes" });
+    }
+
+    const { id } = req.params
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(404).json({ msg: `Lo sentimos, no existe el cliente con ID: ${id}` });
     }
-    
+
     const cliente = await Cliente.findById(id).select("-createdAt -updatedAt -__v -token -confirmEmail -password")
-    
+
     res.status(200).json(cliente)
 }
 
-const eliminarCliente = async (req,res)=>{
-    const {id} = req.params
+const eliminarCliente = async (req, res) => {
+    const { id } = req.params; // Obtener el ID de la ruta
 
-    if (Object.values(req.body).includes("")) 
-        return res.status(400).json({msg:"Lo sentimos, debes llenar todos los campos"})
-    
-    if( !mongoose.Types.ObjectId.isValid(id) ) 
-        return res.status(404).json({msg:`Lo sentimos, no existe el cliente con ID: ${id}`})
-    
-    // Verificar si el producto existe en la base de datos (si ya fue eliminado)
+    // Verificar si el usuario es administrador o cliente
+    if (!req.administradorBDD && !req.clienteBDD) {
+        return res.status(401).json({ msg: "Acceso denegado. Debes estar autenticado para realizar esta acción" });
+    }
+
+    // Si el usuario es administrador, puede eliminar cualquier cuenta
+    if (req.administradorBDD) {
+    } 
+    // Si el usuario es el cliente, solo puede eliminar su propia cuenta
+    else if (req.clienteBDD && req.clienteBDD._id.toString() === id) {
+    } else {
+        // Si el cliente intenta eliminar la cuenta de otro
+        return res.status(403).json({ msg: "Acceso denegado. Solo puedes eliminar tu propia cuenta" });
+    }
+
+    // Verificar que el ID proporcionado sea válido
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(404).json({ msg: `Lo sentimos, el ID: ${id} no es válido` });
+    }
+
+    // Verificar si el cliente existe en la base de datos
     const cliente = await Cliente.findById(id);
     if (!cliente) {
-        return res.status(404).json({ msg: `El producto con ID: ${id} ya ha sido eliminado` });
+        return res.status(404).json({ msg: `El cliente con ID: ${id} no existe` });
     }
 
-    
-    await Cliente.findByIdAndUpdate(id, { status: false })
-    
-    res.status(200).json({ msg: "Cuenta eliminada exitosamente" })
-}
+    // Verificar si la cuenta ya ha sido eliminada (status: false)
+    if (cliente.status === false) {
+        return res.status(404).json({ msg: `La cuenta con ID: ${id} ya ha sido eliminada` });
+    }
 
+    // Realizar la eliminación (cambiar el estado a false)
+    try {
+        await Cliente.findByIdAndUpdate(id, { status: false });
+    } catch (error) {
+        return res.status(500).json({ msg: "Hubo un error al eliminar la cuenta" });
+    }
+
+    // Mensajes dependiendo de quien elimino la cuenta
+    if (req.administradorBDD) {
+        return res.status(200).json({ msg: "Cuenta de cliente eliminada exitosamente" });
+    }
+    else {
+        return res.status(200).json({ msg: "Tu cuenta ha sido eliminada exitosamente" });
+    }
+};
 // Actualizar 
-const actualizarCliente = async(req,res)=>{
-    const {id} = req.params
-    
-    if (Object.values(req.body).includes("")) 
-        return res.status(400).json({msg:"Lo sentimos, debes llenar todos los campos"})
-    
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(404).json({ msg: `Lo sentimos, no existe el cliente con ID: ${id}` })
+const actualizarCliente = async (req, res) => {
+
+    if (!req.clienteBDD) {
+        return res.status(404).json({ msg: "Acceso denegado. Solo los clientes pueden ver su propio perfil" });
     }
-    
+
+    const { id } = req.params
+
+    if (Object.values(req.body).includes(""))
+        return res.status(400).json({ msg: "Lo sentimos, debes llenar todos los campos" })
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(404).json({ msg: `Lo sentimos, no existe un usuario con ID: ${id}` })
+    }
+
     // Verificar si el cliente existe en la base de datos
-        const cliente = await Cliente.findById(id);
-        if (!cliente) {
-            return res.status(404).json({ msg: `Cliente con ID: ${id} no encontrado o ya fue eliminado` })
-        }
-    
+    const cliente = await Cliente.findById(id);
+    if (!cliente) {
+        return res.status(404).json({ msg: `Usuario con ID: ${id} no encontrado o ya fue eliminado` })
+    }
+
     await Cliente.findByIdAndUpdate(id, req.body)
-    
-    res.status(200).json({msg:"Actualización exitosa"})
+
+    res.status(200).json({ msg: "Actualización exitosa" })
 }
 
 const actualizarPassword = async (req, res) => {
+
+    if (!req.clienteBDD) {
+        return res.status(404).json({ msg: "Acceso denegado. Solo los clientes pueden actualizar su contraseña" });
+    }
+
     const clienteBDD = await Cliente.findById(req.clienteBDD._id)
-    
-    if (!clienteBDD) 
-        return res.status(404).json({ msg: `Lo sentimos, no existe el cliente con ID ${req.clienteBDD._id}` })
+
+    if (!clienteBDD)
+        return res.status(404).json({ msg: `Lo sentimos, no existe un usuario con ID ${req.clienteBDD._id}` })
 
     const verificarPassword = await clienteBDD.matchPassword(req.body.passwordactual)
-    
-    if (!verificarPassword) 
+
+    if (!verificarPassword)
         return res.status(404).json({ msg: "Lo sentimos, el password actual no es el correcto" })
 
     clienteBDD.password = await clienteBDD.encrypPassword(req.body.passwordnuevo)
-    
+
     await clienteBDD.save()
-    
+
     res.status(200).json({ msg: "Password actualizado correctamente" })
 }
 
@@ -174,16 +223,16 @@ const actualizarPassword = async (req, res) => {
 // Recuperar contrseña
 
 const recuperarPassword = async (req, res) => {
-     // Datos del request
+    // Datos del request
     const { email } = req.body
 
     // Validar campos vacios
-    if (Object.values(req.body).includes("")) 
+    if (Object.values(req.body).includes(""))
         return res.status(404).json({ msg: "Lo sentimos, debes llenar todos los campos" })
 
     // Validar si el correo existe en la base de datos
     const clienteBDD = await Cliente.findOne({ email })
-    if (!clienteBDD) 
+    if (!clienteBDD)
         return res.status(404).json({ msg: "Lo sentimos, el email no está registrado" })
 
     // Interaccion con la base de datos
@@ -191,20 +240,19 @@ const recuperarPassword = async (req, res) => {
     clienteBDD.token = token
     await sendMailToRecoveryPassword(email, token, false)
     await clienteBDD.save();
-    
+
     res.status(200).json({ msg: "Revisa tu correo electrónico para restablecer tu cuenta" })
 }
 
 const comprobarTokenPassword = async (req, res) => {
-    
     // Verificar que el token exista
-    if (!req.params.token) 
+    if (!req.params.token)
         return res.status(404).json({ msg: "Lo sentimos, no se puede validar la cuenta" })
 
 
     // Comprobar si el token es válido
-    const clienteBDD = await Cliente.findOne({  token: req.params.token })
-    if (clienteBDD?.token !== req.params.token) 
+    const clienteBDD = await Cliente.findOne({ token: req.params.token })
+    if (clienteBDD?.token !== req.params.token)
         return res.status(404).json({ msg: "Lo sentimos, el token no es válido jjxd" })
 
     await clienteBDD.save()
@@ -215,21 +263,21 @@ const comprobarTokenPassword = async (req, res) => {
 const nuevoPassword = async (req, res) => {
     const { password, confirmpassword } = req.body;
     // Verificar campos vacios
-    if (Object.values(req.body).includes("")) 
+    if (Object.values(req.body).includes(""))
         return res.status(404).json({ msg: "Lo sentimos, debes llenar todos los campos" });
 
     // Confirmar si las contraseñas son iguales
-    if (password !== confirmpassword) 
+    if (password !== confirmpassword)
         return res.status(404).json({ msg: "Lo sentimos, las contraseñas no coinciden" });
 
     const clienteBDD = await Cliente.findOne({ token: req.params.token });
-    if (clienteBDD?.token !== req.params.token) 
+    if (clienteBDD?.token !== req.params.token)
         return res.status(404).json({ msg: "Lo sentimos, el token no es válido o ha expirado" });
 
     clienteBDD.token = null;
     clienteBDD.password = await clienteBDD.encrypPassword(password);
     await clienteBDD.save();
-    
+
     res.status(200).json({ msg: "Felicitaciones, ya puedes iniciar sesión con tu nuevo password" });
 }
 

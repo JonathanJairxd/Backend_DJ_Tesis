@@ -65,6 +65,11 @@ const login = async (req, res) => {
 }
 
 const perfil = (req, res) => {
+    // Verificar que el cliente con el id del token exista en la base de datos
+    // Se usa tambien para verificar el token de acuerdo al rol que le es permitido
+    if (!req.administradorBDD) {
+        return res.status(404).json({ msg: "Acceso denegado. Solo el administrador puede ver su propio perfil" });
+    }
     delete req.administradorBDD.token
     delete req.administradorBDD.createdAt
     delete req.administradorBDD.updatedAt
@@ -74,6 +79,11 @@ const perfil = (req, res) => {
 
 // Actualizar
 const actualizarPerfil = async (req, res) => {
+
+    if (!req.administradorBDD) {
+        return res.status(404).json({ msg: "Acceso denegado. Solo el Administrador puede ver su propio perfil" });
+    }
+
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id))
@@ -113,6 +123,10 @@ const actualizarPerfil = async (req, res) => {
 
 const actualizarPassword = async (req, res) => {
 
+    if (!req.administradorBDD) {
+        return res.status(404).json({ msg: "Acceso denegado. Solo el administrador puede actualizar su contraseña" });
+    }
+
     const { passwordactual, passwordnuevo } = req.body;
 
     // Validar que se proporcionen ambas contraseñas
@@ -123,7 +137,7 @@ const actualizarPassword = async (req, res) => {
     const administradorBDD = await Administrador.findById(req.administradorBDD._id);
 
     if (!administradorBDD)
-        return res.status(404).json({ msg: `Lo sentimos, no existe el administrador con ID ${req.administradorBDD._id}` });
+        return res.status(404).json({ msg: `Lo sentimos, no existe un administrador con ID ${req.administradorBDD._id}` });
 
     const verificarPassword = await administradorBDD.matchPassword(passwordactual);
 
