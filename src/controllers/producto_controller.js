@@ -2,6 +2,13 @@ import Producto from "../models/Producto.js"
 import mongoose from "mongoose"
 
 const registrarProducto = async (req, res) => {
+
+    // Verificar que el cliente con el id del token exista en la base de datos
+    // Se usa tambien para verificar el token de acuerdo al rol que le es permitido
+    if (!req.administradorBDD) {
+        return res.status(404).json({ msg: "Acceso denegado. Solo el administrador puede registrar productos" });
+    }
+
     const { nombreDisco, artista, precio, genero, stock } = req.body
 
     //Para que se pueda pedir la imagen
@@ -47,7 +54,21 @@ const registrarProducto = async (req, res) => {
 
 const listarProducto = async (req, res) => {
     try {
-        const productos = await Producto.find({stock: { $gt: 0 } }).select("-createdAt -updatedAt -__v")
+        let productos;
+
+        // Si es administrador, ve todos los productos
+        if (req.administradorBDD) {
+            productos = await Producto.find().select("-createdAt -updatedAt -__v");
+        } 
+        // Si es cliente, solo ve productos que tengan stock
+        else if(req.clienteBDD){
+            productos = await Producto.find({stock: { $gt: 0 } }).select("-createdAt -updatedAt -__v")
+        } 
+        // Si no es ninguno , el acceso es denegado
+        else{
+             return res.status(401).json({ msg: "Acceso denegado. Debes estar autenticado para ver los productos" });
+        }
+
         res.status(200).json(productos)
     } catch (error) {
         res.status(404).json({ msg: "Hubo un error al obtener la lista de productos" })
@@ -70,9 +91,14 @@ const detalleProducto = async (req, res) => {
         return res.status(404).json({ msg: `Producto con ID: ${id} no encontrado o ya fue eliminado` })
     }
 
-    // Verifica si tiene stock o no
-    if (producto.stock <= 0) {
+    // Si es cliente y el producto no tiene stock no se muestra
+    if (req.clienteBDD && producto.stock <= 0) {
         return res.status(404).json({ msg: `Producto con ID: ${id} no disponible` });
+    }
+
+    // Si no es admin ni cliente, denegar acceso
+    if (!req.administradorBDD && !req.clienteBDD) {
+        return res.status(401).json({ msg: "Acceso denegado. Debes estar autenticado para ver los productos" });
     }
 
     // Detalles del producto
@@ -81,6 +107,11 @@ const detalleProducto = async (req, res) => {
 
 
 const actualizarProducto = async (req, res) => {
+
+    if (!req.administradorBDD) {
+        return res.status(404).json({ msg: "Acceso denegado. Solo el administrador puede actualizar productos" });
+    }
+
     const { id } = req.params
 
     if (req.body && Object.values(req.body).includes("")) {
@@ -113,6 +144,11 @@ const actualizarProducto = async (req, res) => {
 }
 
 const eliminarProducto = async (req, res) => {
+
+    if (!req.administradorBDD) {
+        return res.status(404).json({ msg: "Acceso denegado. Solo el administrador puede eliminar productos" });
+    }
+
     const { id } = req.params
 
     // Verificar que el id sea valido

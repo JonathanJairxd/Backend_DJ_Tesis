@@ -81,7 +81,7 @@ const perfil = (req, res) => {
 const actualizarPerfil = async (req, res) => {
 
     if (!req.administradorBDD) {
-        return res.status(404).json({ msg: "Acceso denegado. Solo el Administrador puede ver su propio perfil" });
+        return res.status(404).json({ msg: "Acceso denegado. Solo el Administrador puede actualizar su propio perfil" });
     }
 
     const { id } = req.params;
