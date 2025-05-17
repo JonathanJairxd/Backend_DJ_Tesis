@@ -5,19 +5,19 @@ import verificarAutenticacion from '../middlewares/autenticacion.js'
 const router = Router()
 
 // Autenticacion del administrador DJ
-router.post('/login',login)
+router.post('/admin/login',login)
 
 // Información del administrador
-router.get('/perfil', verificarAutenticacion, perfil)
+router.get('/admin/perfil', verificarAutenticacion, perfil)
 router.put('/admin/actualizarperfil/:id', verificarAutenticacion,actualizarPerfil)
 
 // Cambio de contraseña
 router.put('/admin/actualizarpassword', verificarAutenticacion, actualizarPassword)
 
 // Recuperar contraseña
-router.post('/recuperar-password',recuperarPassword)
-router.get('/recuperar-password/:token',comprobarTokenPasword)
-router.post('/nuevo-password/:token',nuevoPassword)
+router.post('/admin/recuperar-password',recuperarPassword)
+router.get('/admin/recuperar-password/:token',comprobarTokenPasword)
+router.post('/admin/nuevo-password/:token',nuevoPassword)
 
 
 
