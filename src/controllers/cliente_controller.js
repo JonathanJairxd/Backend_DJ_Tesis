@@ -67,6 +67,38 @@ const confirmarEmail = async (req, res) => {
 
 }
 
+const reenviarConfirmacionEmail = async (req, res) => {
+    const { email } = req.body;
+
+    // Validar campo vacío
+    if (!email) {
+        return res.status(400).json({ msg: "El campo email es obligatorio" });
+    }
+
+    // Buscar al cliente por email
+    const clienteBDD = await Cliente.findOne({ email });
+
+    if (!clienteBDD) {
+        return res.status(404).json({ msg: "No se encontró un cliente con ese email" });
+    }
+
+    // Verificar si ya confirmó su email
+    if (clienteBDD.confirmarEmail) {
+        return res.status(400).json({ msg: "La cuenta ya ha sido confirmada" });
+    }
+
+    // Generar un nuevo token y guardarlo
+    const nuevoToken = clienteBDD.crearToken();
+    clienteBDD.token = nuevoToken;
+    await clienteBDD.save();
+
+    // Enviar el correo
+    await sendMailToCliente(email, nuevoToken);
+
+    res.status(200).json({ msg: "Se ha reenviado el correo de confirmación" });
+};
+
+
 const loginCliente = async (req, res) => {
     const { email, password } = req.body
 
@@ -324,6 +356,7 @@ const nuevoPassword = async (req, res) => {
 export {
     registrarCliente,
     confirmarEmail,
+    reenviarConfirmacionEmail,
     loginCliente,
     perfilCliente,
     listarClientes,
