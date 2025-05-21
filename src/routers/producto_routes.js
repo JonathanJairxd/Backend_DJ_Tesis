@@ -9,8 +9,8 @@ const router = Router()
 const upload = multer({ storage })
 
 router.post('/producto/registro', upload.single('imagen'), verificarAutenticacion,registrarProducto)
-router.get('/producto/listar', verificarAutenticacion,listarProducto)
-router.get('/producto/detalle/:id',verificarAutenticacion,detalleProducto)
+router.get('/producto/listar',listarProducto)
+router.get('/producto/detalle/:id',detalleProducto)
 router.put('/producto/actualizar/:id',upload.single('imagen'), verificarAutenticacion,actualizarProducto)
 router.delete('/producto/eliminar/:id',verificarAutenticacion,eliminarProducto)
 

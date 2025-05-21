@@ -54,20 +54,7 @@ const registrarProducto = async (req, res) => {
 
 const listarProducto = async (req, res) => {
     try {
-        let productos;
-
-        // Si es administrador, ve todos los productos
-        if (req.administradorBDD) {
-            productos = await Producto.find().select("-createdAt -updatedAt -__v");
-        } 
-        // Si es cliente, solo ve productos que tengan stock
-        else if(req.clienteBDD){
-            productos = await Producto.find({stock: { $gt: 0 } }).select("-createdAt -updatedAt -__v")
-        } 
-        // Si no es ninguno , el acceso es denegado
-        else{
-             return res.status(401).json({ msg: "Acceso denegado. Debes estar autenticado para ver los productos" });
-        }
+        const productos = await Producto.find().select("-createdAt -updatedAt -__v")
 
         res.status(200).json(productos)
     } catch (error) {
@@ -89,16 +76,6 @@ const detalleProducto = async (req, res) => {
     // // Verificar si el producto existe en la base de datos () si se encontro
     if (!producto) {
         return res.status(404).json({ msg: `Producto con ID: ${id} no encontrado o ya fue eliminado` })
-    }
-
-    // Si es cliente y el producto no tiene stock no se muestra
-    if (req.clienteBDD && producto.stock <= 0) {
-        return res.status(404).json({ msg: `Producto con ID: ${id} no disponible` });
-    }
-
-    // Si no es admin ni cliente, denegar acceso
-    if (!req.administradorBDD && !req.clienteBDD) {
-        return res.status(401).json({ msg: "Acceso denegado. Debes estar autenticado para ver los productos" });
     }
 
     // Detalles del producto
@@ -162,14 +139,10 @@ const eliminarProducto = async (req, res) => {
         return res.status(404).json({ msg: `El producto con ID: ${id} no existe` });
     }
 
-    if (producto.stock === 0) {
-        return res.status(200).json({ msg: `El producto con ID: ${id} ya ha sido eliminado` });
-    }
-
     // Se elimina el producto de la base de datos
-    producto.stock = 0
+    await Producto.findByIdAndDelete(id)
 
-    await producto.save();
+
 
     res.status(200).json({ msg: "Producto eliminado exitosamente" })
 }

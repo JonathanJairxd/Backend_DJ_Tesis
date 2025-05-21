@@ -5,7 +5,7 @@ import generarJWT from "../helpers/crearJWT.js"
 
 
 const registrarCliente = async (req, res) => {
-    const { email, password, confirmarPassword} = req.body;
+    const { email, password, confirmarPassword } = req.body;
 
     // Validar que no haya campos vacíos
     if (Object.values(req.body).includes("")) {
@@ -13,7 +13,7 @@ const registrarCliente = async (req, res) => {
     }
 
     // Verificar la contraseña añadida en el registro
-     if (password !== confirmarPassword) {
+    if (password !== confirmarPassword) {
         return res.status(400).json({ msg: "Las contraseñas no coinciden" });
     }
 
@@ -28,8 +28,8 @@ const registrarCliente = async (req, res) => {
     const nuevoCliente = new Cliente(req.body);
     // Encriptar el password
     nuevoCliente.password = await nuevoCliente.encrypPassword(password)
-   //Crear el token
-   const token = nuevoCliente.crearToken()
+    //Crear el token
+    const token = nuevoCliente.crearToken()
     // Enviar correo de bienvenida con la contraseña
     await sendMailToCliente(email, token)
 
@@ -39,18 +39,18 @@ const registrarCliente = async (req, res) => {
     res.status(200).json({ msg: "Revisa tu correo electrónico para confirmar tu cuenta" })
 }
 
-const confirmarEmail = async(req, res)=>{
+const confirmarEmail = async (req, res) => {
 
     // Verificar si el token esta presente en los parametros de la URL
-    if(!req.params.token) {
-        return res.status(400).json({msg:"Lo sentimos, no se puede validar la cuenta"})
+    if (!req.params.token) {
+        return res.status(400).json({ msg: "Lo sentimos, no se puede validar la cuenta" })
     }
     // Buscar el cliente en la base de datos usando el token recibido
-    const clienteBDD = await Cliente.findOne({token: req.params.token})
+    const clienteBDD = await Cliente.findOne({ token: req.params.token })
 
     // Verificar si el token ya fue utilizado o no existe
-    if(!clienteBDD) {
-        return res.status(404).json({msg:"No se encontró un cliente con ese token"})
+    if (!clienteBDD) {
+        return res.status(404).json({ msg: "No se encontró un cliente con ese token" })
     }
     // Verificar si la cuenta ya está confirmada
     if (clienteBDD.confirmarEmail) {
@@ -59,11 +59,11 @@ const confirmarEmail = async(req, res)=>{
     // Eliminar el token del cliente ya que ha sido validado
     clienteBDD.token = null
     // Marcar la cuenta como confirmada
-    clienteBDD.confirmarEmail=true
+    clienteBDD.confirmarEmail = true
 
     await clienteBDD.save()
 
-    res.status(200).json({msg:"Token confirmado, ya puedes iniciar sesión"}) 
+    res.status(200).json({ msg: "Token confirmado, ya puedes iniciar sesión" })
 
 }
 
@@ -74,9 +74,14 @@ const loginCliente = async (req, res) => {
     if (Object.values(req.body).includes(""))
         return res.status(400).json({ msg: "Lo sentimos, debes llenar todos los campos" })
 
-
     // Buscar al cliente en la base de datos
     const clienteBDD = await Cliente.findOne({ email });
+
+    // Verifica si la cuenta fue confirmada o no
+    if (clienteBDD?.confirmarEmail === false) 
+        return res.status(403).json({ msg: "Lo sentimos, debe verificar su cuenta" })
+
+    
     if (!clienteBDD) {
         return res.status(404).json({ msg: "Lo sentimos, el email no se encuentra registrado" })
     }
@@ -91,7 +96,7 @@ const loginCliente = async (req, res) => {
     const token = generarJWT(clienteBDD._id, "Cliente")
 
     // Extraer datos del cliente
-    const { nombre, telefono, direccion, ciudad, _id } = clienteBDD;
+    const { nombre, telefono, direccion, provincia, ciudad, _id } = clienteBDD;
 
     // Respuesta exitosa
     res.status(200).json({
@@ -100,6 +105,7 @@ const loginCliente = async (req, res) => {
         email,
         telefono,
         direccion,
+        provincia,
         ciudad,
         _id,
         email: clienteBDD.email
@@ -163,7 +169,7 @@ const eliminarCliente = async (req, res) => {
 
     // Si el usuario es administrador, puede eliminar cualquier cuenta
     if (req.administradorBDD) {
-    } 
+    }
     // Si el usuario es el cliente, solo puede eliminar su propia cuenta
     else if (req.clienteBDD && req.clienteBDD._id.toString() === id) {
     } else {
