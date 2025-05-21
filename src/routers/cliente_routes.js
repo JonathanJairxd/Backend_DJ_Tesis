@@ -6,7 +6,7 @@ const router = Router()
 router.post('/cliente/registro', registrarCliente)
 router.get("/cliente/confirmar/:token", confirmarEmail)
 
-router.post("/reenviar-confirmacion", reenviarConfirmacionEmail);
+router.post("/cliente/reenviar-confirmacion", reenviarConfirmacionEmail);
 
 router.post('/cliente/login', loginCliente)
 router.get('/cliente/perfil', verificarAutenticacion ,perfilCliente)
