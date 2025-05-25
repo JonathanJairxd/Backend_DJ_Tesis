@@ -248,8 +248,10 @@ const actualizarCliente = async (req, res) => {
     }
 
     const { id } = req.params
+    // Para no tomar en cuenta si el campo de la foto esta vacio o no
+    const { fotoPerfil, ...restoCampos } = req.body;
 
-    if (Object.values(req.body).includes(""))
+    if (Object.values(restoCampos).includes(""))
         return res.status(400).json({ msg: "Lo sentimos, debes llenar todos los campos" })
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -262,7 +264,17 @@ const actualizarCliente = async (req, res) => {
         return res.status(404).json({ msg: `Usuario con ID: ${id} no encontrado o ya fue eliminado` })
     }
 
-    await Cliente.findByIdAndUpdate(id, req.body)
+     // Si hay imagen, actualizarla
+    if (req.file) {
+        cliente.fotoPerfil = req.file.path;  
+    }
+
+    // Si se ha enviado null o alguna indicación para eliminar la foto
+    if (req.body.eliminarFoto === "true") {
+        cliente.fotoPerfil = null;  // Eliminamos la foto
+    }
+
+    await Cliente.findByIdAndUpdate(id, { ...req.body, fotoPerfil: cliente.fotoPerfil })
 
     res.status(200).json({ msg: "Actualización exitosa" })
 }

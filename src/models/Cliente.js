@@ -37,8 +37,11 @@ const clienteSchema = new Schema({
         required: true,
         trim: true
     },
-    // En este apartado se puede agregar historial de compras
-    // Y asi mismo un aprtado para la gestion de reservas de eventos
+    fotoPerfil: {
+        type: String,
+        default: null
+    }
+    ,
     status: {
         type: Boolean,
         default: true
