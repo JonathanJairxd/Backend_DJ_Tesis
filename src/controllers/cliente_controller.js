@@ -133,13 +133,13 @@ const loginCliente = async (req, res) => {
     // Respuesta exitosa
     res.status(200).json({
         token,
+        _id:clienteBDD._id,
         nombre,
         email,
         telefono,
         direccion,
         provincia,
         ciudad,
-        _id,
         email: clienteBDD.email
     });
 }
