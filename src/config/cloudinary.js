@@ -8,7 +8,8 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 })
 
-const storage = new CloudinaryStorage({
+// Storage para los productos
+const storageProductos = new CloudinaryStorage({
   cloudinary,
   params: {
     folder: 'productos',
@@ -16,4 +17,35 @@ const storage = new CloudinaryStorage({
   },
 })
 
-export { cloudinary, storage }
+// Storage para las fotos de los clientes (perfil)
+const storageClientes = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'clientes',
+    allowed_formats: ['jpg', 'png', 'jpeg'],
+  },
+})
+
+// Storage para los comprobantes de pago de la compra
+const storageComprobantesPago = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'comprobantes_pago',
+    allowed_formats: ['jpg', 'png', 'jpeg'],
+  },
+})
+
+// Storage para los comprobantes de envio de los productos
+const storageComprobantesEnvio = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'comprobantes_envio',
+    allowed_formats: ['jpg', 'png', 'jpeg'],
+  },
+})
+
+
+export { cloudinary, storageProductos, 
+  storageClientes, 
+  storageComprobantesPago , 
+  storageComprobantesEnvio }

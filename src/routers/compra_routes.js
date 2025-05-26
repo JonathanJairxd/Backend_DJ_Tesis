@@ -1,19 +1,22 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { storage } from '../config/cloudinary.js';
+import { storageComprobantesPago, storageComprobantesEnvio} from '../config/cloudinary.js';
 import { finalizarCompra, actualizarEstadoCompra, obtenerHistorialCompras} from '../controllers/compra_controller.js';
-import verificarAutenticacion from '../middlewares/autenticacion.js'; // Aquí es donde se validará el rol de admin también
+import verificarAutenticacion from '../middlewares/autenticacion.js'; 
 
 const router = Router();
 
-// Configuración de Multer para la subida de archivos a Cloudinary
-const upload = multer({ storage });
+// Configuracion de Multer para comporbantes de pago
+const uploadComprobantePago = multer({ storage: storageComprobantesPago });
+
+// Configuracion de Multer para comprobantes de envio de los productos
+const uploadComprobanteEnvio = multer({ storage: storageComprobantesEnvio });
 
 // Ruta para finalizar una compra (convertir el carrito en una compra)
-router.post('/compras/finalizar', upload.single('comprobantePago'), verificarAutenticacion, finalizarCompra);
+router.post('/compras/finalizar', verificarAutenticacion, uploadComprobantePago.single('comprobantePago') ,finalizarCompra);
 
 // Ruta para que el administrador pueda actualizar el estado de una compra (de 'pendiente' a 'enviado')
-router.put('/compras/estado/:id', upload.single('comprobanteEnvio'), verificarAutenticacion, actualizarEstadoCompra);
+router.put('/compras/estado/:id', verificarAutenticacion, uploadComprobanteEnvio.single('comprobanteEnvio') ,actualizarEstadoCompra);
 
 // Ruta para obtener el historial de compras de un cliente
 router.get('/compras/historial',verificarAutenticacion, obtenerHistorialCompras);

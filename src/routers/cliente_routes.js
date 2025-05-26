@@ -1,12 +1,12 @@
 import { Router } from 'express';
 import multer from 'multer';
-import { storage } from '../config/cloudinary.js'
+import { storageClientes } from '../config/cloudinary.js'
 import { actualizarCliente, actualizarPassword, comprobarTokenPassword, confirmarEmail, detalleCliente, eliminarCliente, listarClientes, loginCliente, nuevoPassword, perfilCliente, recuperarPassword, reenviarConfirmacionEmail, registrarCliente } from '../controllers/cliente_controller.js';
 import verificarAutenticacion from '../middlewares/autenticacion.js';
 
 const router = Router()
 // Subida de foto de perfil del cliente
-const upload = multer({ storage });
+const uploadCliente = multer({ storage: storageClientes });
 
 router.post('/cliente/registro', registrarCliente)
 router.get("/cliente/confirmar/:token", confirmarEmail)
@@ -17,7 +17,7 @@ router.post('/cliente/login', loginCliente)
 router.get('/cliente/perfil', verificarAutenticacion ,perfilCliente)
 router.get('/cliente/listar', verificarAutenticacion, listarClientes)
 router.get('/cliente/detalle/:id', verificarAutenticacion, detalleCliente)
-router.put('/cliente/actualizar/:id', upload.single('fotoPerfil') , verificarAutenticacion, actualizarCliente)
+router.put('/cliente/actualizar/:id', verificarAutenticacion, uploadCliente.single('fotoPerfil') , actualizarCliente)
 router.delete('/cliente/eliminar/:id', verificarAutenticacion, eliminarCliente)
 
 //Cambio de contraseña
