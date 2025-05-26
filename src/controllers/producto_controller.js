@@ -9,7 +9,7 @@ const registrarProducto = async (req, res) => {
         return res.status(404).json({ msg: "Acceso denegado. Solo el administrador puede registrar productos" });
     }
 
-    const { nombreDisco, artista, precio, genero, stock } = req.body
+    const { nombreDisco, artista, precio, genero, generoPersonalizado ,stock } = req.body
 
     //Para que se pueda pedir la imagen
     const imagen = req.file?.path
@@ -28,6 +28,22 @@ const registrarProducto = async (req, res) => {
         return res.status(400).json({ msg: "El precio y el stock deben ser números válidos" })
     }
 
+    // Generos predefinidos
+    const generosPermitidos = ['Rock', 'Pop', 'Jazz', 'Electrónica', 'Hip-Hop', 'Clásica', 'Otro']
+
+    if (!generosPermitidos.includes(genero)) {
+        return res.status(400).json({ msg: "Género no válido" });
+    }
+
+    // Si el genero es "Otro", se debe ingresar un nuevo genero
+    if (genero === "Otro") {
+        if (!generoPersonalizado || generoPersonalizado.trim() === "") {
+            return res.status(400).json({ msg: "Debes escribir un género personalizado" });
+        }
+        // Reemplaza el valor de "genero" directamente
+        req.body.genero = generoPersonalizado.trim();
+    }
+
     // Verificar si el producto ya esta registrado en la base de datos
     const verificarProductoBDD = await Producto.findOne({ nombreDisco })
     if (verificarProductoBDD) {
@@ -39,15 +55,14 @@ const registrarProducto = async (req, res) => {
         nombreDisco,
         artista,
         precio,
-        genero,
+        genero: req.body.genero,
         stock,
         imagen
     })
 
     // Guardar el producto en la base de datos
     await nuevoProducto.save()
-    console.log("Producto registrado: ", nuevoProducto)
-
+    
     // Se responde con exito y los detalles del producto registrado 
     res.status(200).json({ msg: "Producto registrado con éxito" })
 }

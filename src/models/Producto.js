@@ -18,7 +18,7 @@ const productoSchema = new Schema({
     genero: {
         type: String,
         required: true,
-        enum: ['Rock', 'Pop', 'Jazz', 'Electrónica', 'Hip-Hop', 'Clásica', 'Otro']
+        trim: true
     },
     stock: {
         type: Number,
