@@ -3,11 +3,23 @@ import Carrito from "../models/Carrito.js";
 
 // Obtener historial de compras del cliente
 const obtenerHistorialCompras = async (req, res) => {
-    
+
     try {
-        const compras = await Compra.find({ cliente: req.clienteBDD._id })
-            .populate("productos.producto", "-__v -createdAt -updatedAt")
-            .select("-__v -createdAt -updatedAt");
+        let compras;
+
+        if (req.administradorBDD) {
+            // Si es admin se muestran todas las compras, con info del cliente
+            compras = await Compra.find()
+                .populate("cliente", "nombre email")
+                .populate("productos.producto", "nombre precio")
+                .select("fechaCompra tipoPago total productos cliente");
+
+        } else if (req.clienteBDD) {
+
+            compras = await Compra.find({ cliente: req.clienteBDD._id })
+                .populate("productos.producto", "nombre precio")
+                .select("fechaCompra total productos tipoPago estado");
+        }
 
         if (compras.length === 0) {
             return res.status(404).json({ msg: "No tienes compras previas." });
