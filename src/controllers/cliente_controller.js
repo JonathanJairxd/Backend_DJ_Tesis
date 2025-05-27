@@ -264,9 +264,13 @@ const actualizarCliente = async (req, res) => {
         return res.status(404).json({ msg: `Usuario con ID: ${id} no encontrado o ya fue eliminado` })
     }
 
+    // Se hace un console log par que la app movil pueda visualizar que tiene el req.file 
+    //ELIMINARR 
+    console.log('req.file:', req.file);
+
      // Si hay imagen, actualizarla
     if (req.file) {
-        cliente.fotoPerfil = req.file.path;  
+        cliente.fotoPerfil = req.file.secure_url || req.file.path || null;  
     }
 
     // Si se ha enviado null o alguna indicación para eliminar la foto
