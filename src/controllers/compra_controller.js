@@ -12,7 +12,7 @@ const obtenerHistorialCompras = async (req, res) => {
             compras = await Compra.find()
                 .populate("cliente", "nombre email")
                 .populate("productos.producto", "nombre precio")
-                .select("fechaCompra tipoPago total productos cliente");
+                .select("fechaCompra tipoPago total productos cliente estado");
 
         } else if (req.clienteBDD) {
 
