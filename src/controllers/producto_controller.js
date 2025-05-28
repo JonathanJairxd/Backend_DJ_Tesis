@@ -124,6 +124,23 @@ const actualizarProducto = async (req, res) => {
     // {new:true} : indica a Mongoose que despues de actualizar un documento
     // devuelva la version mas reciente que se actualizo
 
+    // Generos predefinidos
+    const generosPermitidos = ['Rock', 'Pop', 'Jazz', 'Electrónica', 'Hip-Hop', 'Clásica', 'Otro']
+
+    // Si el género no es válido, responder con error
+    if (!generosPermitidos.includes(req.body.genero)) {
+        return res.status(400).json({ msg: "Género no válido" });
+    }
+
+    // Si el género es "Otro", debe ingresar un nuevo género personalizado
+    if (req.body.genero === "Otro") {
+        if (!req.body.generoPersonalizado || req.body.generoPersonalizado.trim() === "") {
+            return res.status(400).json({ msg: "Debes escribir un género personalizado" });
+        }
+        // Reemplaza el valor de "genero" con el personalizado
+        req.body.genero = req.body.generoPersonalizado.trim();
+    }
+
     // Si hay una imagen nueva, actualiza la imagen
     if (req.file) {
         producto.imagen = req.file.path; // o filename : para que se vea el nombre de la imagen

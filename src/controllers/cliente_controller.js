@@ -166,7 +166,7 @@ const listarClientes = async (req, res) => {
     }
 
     try {
-        const clientes = await Cliente.find({ status: true }).select("-createdAt -updatedAt -__v -password -token -confirmEmail -direccion -ciudad")
+        const clientes = await Cliente.find({ status: true }).select("-createdAt -updatedAt -__v -password -token -confirmarEmail -direccion")
 
         res.status(200).json(clientes);
     } catch (error) {
@@ -186,7 +186,7 @@ const detalleCliente = async (req, res) => {
         return res.status(404).json({ msg: `Lo sentimos, no existe el cliente con ID: ${id}` });
     }
 
-    const cliente = await Cliente.findById(id).select("-createdAt -updatedAt -__v -token -confirmEmail -password")
+    const cliente = await Cliente.findById(id).select("-createdAt -updatedAt -__v -token -confirmarEmail -password")
 
     res.status(200).json(cliente)
 }
