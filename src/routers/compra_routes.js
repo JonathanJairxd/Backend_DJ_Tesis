@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { storageComprobantesPago, storageComprobantesEnvio} from '../config/cloudinary.js';
-import { finalizarCompra, actualizarEstadoCompra, obtenerHistorialCompras} from '../controllers/compra_controller.js';
+import { finalizarCompra, actualizarEstadoCompra, listarHistorialCompras, detalleHistorialCompras} from '../controllers/compra_controller.js';
 import verificarAutenticacion from '../middlewares/autenticacion.js'; 
 
 const router = Router();
@@ -19,7 +19,11 @@ router.post('/compras/finalizar', verificarAutenticacion, uploadComprobantePago.
 router.put('/compras/estado/:id', verificarAutenticacion, uploadComprobanteEnvio.single('comprobanteEnvio') ,actualizarEstadoCompra);
 
 // Ruta para obtener el historial de compras de un cliente
-router.get('/compras/historial',verificarAutenticacion, obtenerHistorialCompras);
+router.get('/compras/historial',verificarAutenticacion, listarHistorialCompras);
+
+// Ruta para obtener el historial de detalle de compras de un cliente
+router.get('/compras/detallehistorial/:id',verificarAutenticacion, detalleHistorialCompras);
+
 
 
 export default router;

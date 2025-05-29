@@ -13,6 +13,10 @@ const compraSchema = new mongoose.Schema({
         ref: "Producto",
         required: true,
       },
+      /*nombre:{
+        type: String,
+        required: true,
+      },*/
       cantidad: {
         type: Number,
         required: true,
@@ -23,19 +27,42 @@ const compraSchema = new mongoose.Schema({
       }
     }
   ],
-  total: {
-    type: Number,
+  direccionEnvio: {
+    callePrincipal: { type: String },
+    calleSecundaria: { type: String },
+    numeracion: { type: String },
+    referencia: { type: String },
+    provincia: { type: String },
+    ciudad: { type: String },
+    /*cedula: { type: String},
+    nombreRecibe : {type: String}*/
+  },
+  zonaEnvio: {
+    type: String,
+    enum: ["quito", "provincia"],
+    required: true,
+  },
+  metodoEnvio: {
+    type: String,
+    enum: ["servientrega", "encuentro-publico"],
     required: true,
   },
   costoEnvio: {
     type: Number,
     required: true,
   },
-  tipoPago: {
+  /*formaPago: {
     type: String,
-    enum: ["efectivo", "transferencia"],
-    required: true,
+    required: true
   },
+  nombre: {
+    type: String,
+    required: true
+  },
+  telefono: {
+    type: Number,
+    required: true
+  },*/
   comprobantePago: {
     type: String, // Se guardara la ruta de la imagen si es transferencia
     default: null,
@@ -45,13 +72,13 @@ const compraSchema = new mongoose.Schema({
     enum: ['pendiente', 'enviado'],
     default: 'pendiente',  // Estado inicial de la compra
   },
-  direccionEnvio: {
-    type: String,
-    required: true,  // direccion donde el producto sera enviado
+  total: {
+    type: Number,
+    required: true,
   },
   comprobanteEnvio: {
     type: String, // Se guardara la ruta de la imagen del comrpobante del envio
-    default: null, 
+    default: null,
   },
   fechaCompra: {
     type: Date,
