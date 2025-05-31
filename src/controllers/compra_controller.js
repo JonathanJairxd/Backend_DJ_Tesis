@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import Compra from "../models/Compra.js";
 import Carrito from "../models/Carrito.js";
+import Producto from '../models/Producto.js';
 
 // Obtener historial de compras del cliente
 const listarHistorialCompras = async (req, res) => {
@@ -84,7 +85,7 @@ const finalizarCompra = async (req, res) => {
         }
 
         // Obtener dirección de envío y tipo de pago desde el cuerpo de la solicitud
-        let { direccionEnvio, zonaEnvio, metodoEnvio } = req.body;
+        let { direccionEnvio, zonaEnvio, metodoEnvio, formaPago } = req.body;
 
         // Verificar que la dirección y el tipo de pago sean válidos
         if (!zonaEnvio || !metodoEnvio) {
@@ -153,13 +154,10 @@ const finalizarCompra = async (req, res) => {
             totalCompra += producto.precio * item.cantidad;
             productosCompra.push({
                 producto: producto._id,
+                nombre: producto.nombreDisco,
                 cantidad: item.cantidad,
                 precio: producto.precio,  // Guardamos el precio actual
             });
-
-            // Reducir el stock del producto
-            producto.stock -= item.cantidad;
-            await producto.save();
         }
 
         // Calcular costo adicional de envio si es Servientrega
@@ -175,11 +173,14 @@ const finalizarCompra = async (req, res) => {
         // Crear una nueva compra
         const nuevaCompra = new Compra({
             cliente: req.clienteBDD._id,
+            nombreCliente: req.clienteBDD.nombre,
+            telefonoCliente: req.clienteBDD.telefono,
             productos: productosCompra,
             total: totalCompra + costoEnvio,
             costoEnvio: costoEnvio,
             zonaEnvio,
             metodoEnvio,
+            formaPago,
             direccionEnvio: metodoEnvio === "servientrega" ? direccionEnvio : null,
             comprobantePago: comprobantePagoURL,  // Guardar el comprobante de pago solo si es por servientrega
             estado: "pendiente",  // Estado inicial como pendiente
@@ -189,6 +190,13 @@ const finalizarCompra = async (req, res) => {
         // Guardar la compra
         await nuevaCompra.save();
 
+
+        // Reducir el stock del producto
+        for (let item of carrito.productos) {
+            const producto = await Producto.findById(item.producto._id);
+            producto.stock -= item.cantidad;
+            await producto.save();
+        }
         // Limpiar el carrito después de la compra
         await Carrito.findByIdAndDelete(carrito._id);
 
@@ -240,7 +248,7 @@ const actualizarEstadoCompra = async (req, res) => {
         res.status(200).json({ msg: "Estado de la compra actualizado con éxito.", compra });
 
     } catch (error) {
-        
+
     }
 
 };

@@ -6,6 +6,14 @@ const compraSchema = new mongoose.Schema({
     ref: "Cliente",
     required: true,
   },
+  nombreCliente: {
+    type: String,
+    required: true
+  },
+  telefonoCliente: {
+    type: Number,
+    required: true
+  },
   productos: [
     {
       producto: {
@@ -13,10 +21,10 @@ const compraSchema = new mongoose.Schema({
         ref: "Producto",
         required: true,
       },
-      /*nombre:{
+      nombre:{
         type: String,
         required: true,
-      },*/
+      },
       cantidad: {
         type: Number,
         required: true,
@@ -34,8 +42,8 @@ const compraSchema = new mongoose.Schema({
     referencia: { type: String },
     provincia: { type: String },
     ciudad: { type: String },
-    /*cedula: { type: String},
-    nombreRecibe : {type: String}*/
+    cedula: { type: String},
+    nombreRecibe : {type: String}
   },
   zonaEnvio: {
     type: String,
@@ -51,18 +59,10 @@ const compraSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  /*formaPago: {
+  formaPago: {
     type: String,
     required: true
   },
-  nombre: {
-    type: String,
-    required: true
-  },
-  telefono: {
-    type: Number,
-    required: true
-  },*/
   comprobantePago: {
     type: String, // Se guardara la ruta de la imagen si es transferencia
     default: null,
