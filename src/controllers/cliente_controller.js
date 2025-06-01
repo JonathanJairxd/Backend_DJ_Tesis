@@ -277,7 +277,7 @@ const eliminarCliente = async (req, res) => {
         }
 
     } catch (error) {
-        res.status(500).json({ msg: "Hubo un error al intentar eliminar un cliente. Por favor, inténtalo de nuevo más tarde" })
+        res.status(400).json({ msg: "Hubo un error al intentar eliminar un cliente. Por favor, inténtalo de nuevo más tarde" })
     }
 };
 
@@ -326,7 +326,7 @@ const actualizarCliente = async (req, res) => {
         res.status(200).json({ msg: "Actualización exitosa" })
 
     } catch (error) {
-        return res.status(500).json({ msg: "Hubo un error al intentar actualizar la info del cliente. Por favor, inténtalo de nuevo más tarde" });
+        return res.status(400).json({ msg: "Hubo un error al intentar actualizar la info del cliente. Por favor, inténtalo de nuevo más tarde" });
     }
 }
 
@@ -354,7 +354,7 @@ const actualizarPassword = async (req, res) => {
         res.status(200).json({ msg: "Password actualizado correctamente" })
 
     } catch (error) {
-        return res.status(500).json({ msg: "Hubo un error al intentar actualizar la contraseña. Por favor, inténtalo de nuevo más tarde" })
+        return res.status(400).json({ msg: "Hubo un error al intentar actualizar la contraseña. Por favor, inténtalo de nuevo más tarde" })
     }
 }
 
