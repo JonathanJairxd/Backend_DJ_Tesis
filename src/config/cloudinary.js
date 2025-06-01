@@ -44,8 +44,18 @@ const storageComprobantesEnvio = new CloudinaryStorage({
   },
 })
 
+// Storage para las imagenes de los eventos
+const storageDetalleEventos = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'detalle_eventos',
+    allowed_formats: ['jpg', 'png', 'jpeg'],
+  },
+})
+
 
 export { cloudinary, storageProductos, 
   storageClientes, 
   storageComprobantesPago , 
-  storageComprobantesEnvio }
+  storageComprobantesEnvio,
+  storageDetalleEventos }

@@ -14,6 +14,8 @@ import routerCarrito from './routers/carrito_routes.js';
 
 import routerCompra from './routers/compra_routes.js';
 
+import routerEvento from './routers/evento_routes.js';
+
 // Inicializaciones
 const app = express()
 dotenv.config()
@@ -48,6 +50,9 @@ app.use('/api',routerCarrito)
 
 // Ruta de las compras
 app.use('/api',routerCompra)
+
+// Ruta de los eventos (consultas)
+app.use('/api',routerEvento)
 
 // Rutas no encontradas
 app.use((req,res)=>res.status(404).send("Endpoint no encontrado - 404"))
