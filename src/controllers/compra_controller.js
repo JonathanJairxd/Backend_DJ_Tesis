@@ -2,6 +2,8 @@ import mongoose from 'mongoose';
 import Compra from "../models/Compra.js";
 import Carrito from "../models/Carrito.js";
 import Producto from '../models/Producto.js';
+import { sendNotificacionNuevaCompra } from "../config/nodemailer.js"
+
 
 // Obtener historial de compras del cliente
 const listarHistorialCompras = async (req, res) => {
@@ -190,7 +192,14 @@ const finalizarCompra = async (req, res) => {
         // Guardar la compra
         await nuevaCompra.save();
 
+        const adminEmail = process.env.ADMIN_EMAIL;
 
+        if (adminEmail) {
+            await sendNotificacionNuevaCompra(adminEmail, req.clienteBDD.nombre, nuevaCompra.total);
+        } else {
+            console.warn("No se encontró el correo del administrador");
+        }
+        
         // Reducir el stock del producto
         for (let item of carrito.productos) {
             const producto = await Producto.findById(item.producto._id);
@@ -244,6 +253,14 @@ const actualizarEstadoCompra = async (req, res) => {
         compra.estado = estado;
 
         await compra.save();
+
+        // Enviar notificación al cliente solo si el estado es 'enviado'
+        if (estado === 'enviado') {
+            const cliente = await Cliente.findById(compra.cliente); // Asegúrate de importar el modelo Cliente
+            if (cliente && cliente.email) {
+                await sendNotificacionPedidoEnviado(cliente.email, cliente.nombre, compra._id.toString());
+            }
+        }
 
         res.status(200).json({ msg: "Estado de la compra actualizado con éxito.", compra });
 

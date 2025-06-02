@@ -57,9 +57,55 @@ const sendMailToCliente = async (userMail, token) => {
     console.log("Mensaje enviado satisfactoriamente: ", info.messageId);
 }
 
+// Notificar al admin cuando hay nueva compra
+const sendNotificacionNuevaCompra = async (adminEmail, clienteNombre, total) => {
+    try {
+        await transporter.sendMail({
+            from: 'sistemaGestionDj@gmail.com',
+            to: adminEmail,
+            subject: "🎉 Nueva compra realizada",
+            html: `
+                <h2>Hola 👋</h2>
+                <p>Un cliente acaba de realizar una nueva compra.</p>
+                <p><strong>Cliente:</strong> ${clienteNombre}</p>
+                <p><strong>Total:</strong> $${total}</p>
+                <hr />
+                <p>Sistema de Edwin DJ - Notificación automática</p>
+            `,
+        });
+        console.log("Correo enviado al admin");
+    } catch (error) {
+        console.error("Error al enviar correo al admin:", error);
+    }
+};
+
+// Notificar al cliente cuando el pedido se envía
+const sendNotificacionPedidoEnviado = async (clienteEmail, nombreCliente, idCompra) => {
+    try {
+        await transporter.sendMail({
+            from: 'sistemaGestionDj@gmail.com',
+            to: clienteEmail,
+            subject: "📦 Tu pedido ha sido enviado",
+            html: `
+                <h2>¡Hola ${nombreCliente}!</h2>
+                <p>Tu pedido ya fue enviado y está en camino.</p>
+                <p><strong>ID del pedido:</strong> ${idCompra}</p>
+                <hr />
+                <p>Sistema de Edwin DJ - Gracias por tu compra 🎵</p>
+            `,
+        });
+        console.log("Correo enviado al cliente");
+    } catch (error) {
+        console.error("Error al enviar correo al cliente:", error);
+    }
+};
+
+
 
 
 export {
     sendMailToRecoveryPassword,
-    sendMailToCliente
+    sendMailToCliente,
+    sendNotificacionNuevaCompra,
+    sendNotificacionPedidoEnviado
 }
