@@ -20,12 +20,12 @@ const sendMailToRecoveryPassword = async (userMail, token, isAdmin = true) => {
     let info = await transporter.sendMail({
         from: 'sistemaGestionDj@gmail.com',
         to: userMail,
-        subject: "Recuperación de contraseña - Sistema de gestión de Edwin DJ",
+        subject: "Recuperación de contraseña - Sistema de Edwin DJ",
         html: `
-        <h1>Recupera tu contraseña</h1>
-        <p>Hola, hemos recibido una solicitud para recuperar tu contraseña en el sistema de gestión de Edwin DJ.</p>
+        <h2>¡Hola!</h2>
+        <p>Hemos recibido una solicitud para recuperar tu contraseña en el sistema de gestión de Edwin DJ.</p>
         <p>Si fuiste tú quien hizo esta solicitud, haz clic en el siguiente enlace para restablecer tu contraseña:</p>
-        <a href="${process.env.URL_BACKEND}/${url}/${token}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Restablecer contraseña</a>
+        <a href="${process.env.URL_BACKEND}/${url}/${token}" class="button">Restablecer contraseña</a>
         <p>Si no solicitaste este cambio, puedes ignorar este correo. No se realizarán cambios en tu cuenta.</p>
         <hr>
         <footer>
@@ -41,14 +41,14 @@ const sendMailToCliente = async (userMail, token) => {
     console.log("Correo a enviar: " ,userMail)
 
     let info = await transporter.sendMail({
-        from: 'admin@djapp.com',
+        from: 'sistemaGestionDj@gmail.com',
         to: userMail,
-        subject: "Correo de Confirmación de Cuenta",
+        subject: "Confirmación de Cuenta - Sistema de Edwin DJ",
         html: `
         <h1>¡Bienvenido a la plataforma de Edwin Dj 🎧🎶</h1>
         <hr>
         <p> ¡Gracias por registrate! Para activar tu cuenta, haz click en el siguiente enlace</p>
-        <a href=${process.env.URL_BACKEND}cliente/confirmar/${encodeURIComponent(token)}>Confirmar mi cuenta</a>
+        <a href="${process.env.URL_BACKEND}cliente/confirmar/${encodeURIComponent(token)}" class="button">Confirmar mi cuenta</a>
         <hr>
         <footer>🎵 ¡Disfruta de la mejor música con nosotros! 🎵</footer>
         `
@@ -58,7 +58,7 @@ const sendMailToCliente = async (userMail, token) => {
 }
 
 // Notificar al admin cuando hay nueva compra
-const sendNotificacionNuevaCompra = async (adminEmail, clienteNombre, total) => {
+const sendNotificacionNuevaCompra = async (adminEmail, clienteNombre, total, metodoEnvio) => {
     try {
         await transporter.sendMail({
             from: 'sistemaGestionDj@gmail.com',
@@ -69,6 +69,11 @@ const sendNotificacionNuevaCompra = async (adminEmail, clienteNombre, total) => 
                 <p>Un cliente acaba de realizar una nueva compra.</p>
                 <p><strong>Cliente:</strong> ${clienteNombre}</p>
                 <p><strong>Total:</strong> $${total}</p>
+                <p><strong>Método de envío:</strong> ${
+                    metodoEnvio === "servientrega" 
+                        ? "Servientrega (transferencia)" 
+                        : "Encuentro Público (efectivo)"
+                }</p>
                 <hr />
                 <p>Sistema de Edwin DJ - Notificación automática</p>
             `,
@@ -79,7 +84,8 @@ const sendNotificacionNuevaCompra = async (adminEmail, clienteNombre, total) => 
     }
 };
 
-// Notificar al cliente cuando el pedido se envía
+
+// Notificar al cliente cuando el pedido se envía por servientrega
 const sendNotificacionPedidoEnviado = async (clienteEmail, nombreCliente, idCompra) => {
     try {
         await transporter.sendMail({
@@ -88,10 +94,12 @@ const sendNotificacionPedidoEnviado = async (clienteEmail, nombreCliente, idComp
             subject: "📦 Tu pedido ha sido enviado",
             html: `
                 <h2>¡Hola ${nombreCliente}!</h2>
-                <p>Tu pedido ya fue enviado y está en camino.</p>
+                <p>Tu pedido ya fue enviado por servientrega y está en camino.</p>
                 <p><strong>ID del pedido:</strong> ${idCompra}</p>
+                <p>El método de entrega ha sido **Servientrega**. Si tienes alguna duda o necesitas más información, no dudes en contactarnos.</p>
                 <hr />
-                <p>Sistema de Edwin DJ - Gracias por tu compra 🎵</p>
+                <p><strong>Sistema de Edwin DJ</strong> - ¡Gracias por tu compra! 🎵</p>
+                <p><em>¡Disfruta tu vinilo! 🎶</em></p>
             `,
         });
         console.log("Correo enviado al cliente");
@@ -100,6 +108,28 @@ const sendNotificacionPedidoEnviado = async (clienteEmail, nombreCliente, idComp
     }
 };
 
+// Notificar al cliente cuando el pedido es Encuentro Publico
+const sendNotificacionCompraRealizadaEncuentro = async (clienteEmail, nombreCliente, idCompra) => {
+    try {
+        await transporter.sendMail({
+            from: 'sistemaGestionDj@gmail.com',
+            to: clienteEmail,
+            subject: "🤝 Tu compra ha sido entregada ",
+            html: `
+                <h2>¡Hola ${nombreCliente}!</h2>
+                <p>Tu compra ha sido entregada exitosamente.</p>
+                <p><strong>ID de tu compra:</strong> ${idCompra}</p>
+                <p>El método de entrega ha sido **Encuentro Público**. Si tienes alguna duda o necesitas más información, no dudes en contactarnos.</p>
+                <hr />
+                <p><strong>Sistema de Edwin DJ</strong> - ¡Gracias por tu compra! 🎵</p>
+                <p><em>¡Disfruta tu vinilo! 🎶</em></p>
+            `,
+        });
+        console.log("Correo de compra (encuentro público) enviado al cliente");
+    } catch (error) {
+        console.error("Error al enviar correo de compra (encuentro público):", error);
+    }
+};
 
 
 
@@ -107,5 +137,6 @@ export {
     sendMailToRecoveryPassword,
     sendMailToCliente,
     sendNotificacionNuevaCompra,
-    sendNotificacionPedidoEnviado
+    sendNotificacionPedidoEnviado,
+    sendNotificacionCompraRealizadaEncuentro
 }

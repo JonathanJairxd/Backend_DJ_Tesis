@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import Compra from "../models/Compra.js";
 import Carrito from "../models/Carrito.js";
 import Producto from '../models/Producto.js';
-import { sendNotificacionNuevaCompra } from "../config/nodemailer.js"
+import { sendNotificacionNuevaCompra, sendNotificacionPedidoEnviado, sendNotificacionCompraRealizadaEncuentro } from "../config/nodemailer.js"
 
 
 // Obtener historial de compras del cliente
@@ -195,11 +195,11 @@ const finalizarCompra = async (req, res) => {
         const adminEmail = process.env.ADMIN_EMAIL;
 
         if (adminEmail) {
-            await sendNotificacionNuevaCompra(adminEmail, req.clienteBDD.nombre, nuevaCompra.total);
+            await sendNotificacionNuevaCompra(adminEmail, req.clienteBDD.nombre, nuevaCompra.total, metodoEnvio);
         } else {
             console.warn("No se encontró el correo del administrador");
         }
-        
+
         // Reducir el stock del producto
         for (let item of carrito.productos) {
             const producto = await Producto.findById(item.producto._id);
@@ -222,18 +222,17 @@ const actualizarEstadoCompra = async (req, res) => {
         return res.status(403).json({ msg: "Acceso denegado. Solo el administrador puede actualizar el estado de la compra." });
     }
 
-    const { id } = req.params;
-    const { estado } = req.body;
-
-    // Validación del estado
-    if (!estado || !['pendiente', 'enviado'].includes(estado)) {
-        return res.status(400).json({ msg: "Estado inválido. Debe ser 'pendiente' o 'enviado'." });
-    }
-
     try {
+        const { id } = req.params;
+        const { estado } = req.body;
+
+        // Validación del estado
+        if (!estado || !['pendiente', 'enviado'].includes(estado)) {
+            return res.status(400).json({ msg: "Estado inválido. Debe ser 'pendiente' o 'enviado'." });
+        }
 
         // Verificar si la compra existe
-        const compra = await Compra.findById(id);
+        const compra = await Compra.findById(id).populate("cliente", "nombre email");
         if (!compra) {
             return res.status(404).json({ msg: "Compra no encontrada." });
         }
@@ -256,16 +255,32 @@ const actualizarEstadoCompra = async (req, res) => {
 
         // Enviar notificación al cliente solo si el estado es 'enviado'
         if (estado === 'enviado') {
-            const cliente = await Cliente.findById(compra.cliente); // Asegúrate de importar el modelo Cliente
-            if (cliente && cliente.email) {
-                await sendNotificacionPedidoEnviado(cliente.email, cliente.nombre, compra._id.toString());
+            const clienteEmail = compra.cliente?.email;
+            const clienteNombre = compra.cliente?.nombre;
+
+            // Aseguramos tener el método de envío de la compra
+            const metodoEnvio = compra.metodoEnvio;
+
+            if (clienteEmail) {
+                if (metodoEnvio === "servientrega") {
+                    // Enviar correo estándar para envío
+                    await sendNotificacionPedidoEnviado(clienteEmail, clienteNombre, compra._id.toString());
+                } else if (metodoEnvio === "encuentro-publico") {
+                    // Enviar correo personalizado para encuentro público
+                    await sendNotificacionCompraRealizadaEncuentro(clienteEmail, clienteNombre, compra._id.toString());
+                } else {
+                    console.warn("Método de envío desconocido");
+                }
+            } else {
+                console.warn("No se encontró email del cliente para enviar notificación.");
             }
         }
 
         res.status(200).json({ msg: "Estado de la compra actualizado con éxito.", compra });
 
     } catch (error) {
-
+        console.log(error)
+        res.status(400).json({ msg: "Hubo un error al intentar actualizar el estado de una compra. Por favor, inténtalo de nuevo más tarde" });
     }
 
 };
