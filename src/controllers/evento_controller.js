@@ -64,6 +64,36 @@ const listarEventos = async (req, res) => {
     }
 };
 
+// Detallar un evento 
+const detalleEvento = async (req, res) => {
+    if (!req.administradorBDD && !req.clienteBDD) {
+        return res.status(401).json({ msg: "Acceso denegado. Debes iniciar sesión como administrador o cliente para ver los detalles del evento" });
+    }
+
+    try {
+        const { id } = req.params;
+
+        // Validar si el ID es válido
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(404).json({ msg: `Lo sentimos, no existe el evento con ID: ${id}` });
+        }
+
+        // Buscar el evento por ID
+        const evento = await Evento.findById(id).select("-createdAt -updatedAt -__v");
+
+        // Verificar si el evento fue encontrado
+        if (!evento) {
+            return res.status(404).json({ msg: `Evento con ID: ${id} no encontrado o ya fue eliminado` });
+        }
+
+        res.status(200).json(evento);
+
+    } catch (error) {
+        res.status(400).json({ msg: "Hubo un error al intentar detallar un evento. Por favor, inténtalo de nuevo más tarde" });
+    }
+};
+
+
 // Actualizar evento
 const actualizarEvento = async (req, res) => {
     if (!req.administradorBDD) {
@@ -142,6 +172,7 @@ const eliminarEvento = async (req, res) => {
 export {
     registrarEvento,
     listarEventos,
+    detalleEvento,
     actualizarEvento,
     eliminarEvento
 };

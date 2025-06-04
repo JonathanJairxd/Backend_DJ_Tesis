@@ -240,15 +240,30 @@ const actualizarEstadoCompra = async (req, res) => {
             return res.status(404).json({ msg: "Compra no encontrada." });
         }
 
-        // Si el estado cambia a 'enviado', verificamos que se haya subido el comprobante de envío
-        if (estado === 'enviado' && !req.file) {
-            return res.status(400).json({ msg: "El comprobante de envío es obligatorio cuando el estado es 'enviado'." });
+        // Validar que 'encuentro-publico' solo se use en Quito
+        if (compra.metodoEnvio === "encuentro-publico" && compra.zonaEnvio !== "quito") {
+            return res.status(400).json({ msg: "El método 'Encuentro Público' solo está disponible para compras dentro de la ciudad de Quito." });
         }
 
-        // Si el estado cambia a 'enviado', subimos el comprobante de envío a Cloudinary
+        // Si el estado es 'enviado', validar según método de envío
         if (estado === 'enviado') {
-            compra.comprobanteEnvio = req.file.path;  // Guardamos la URL del comprobante de envío desde Cloudinary
-            compra.fechaEnvio = new Date();  // Fecha de envío
+            if (compra.metodoEnvio === "servientrega" && !req.file) {
+                return res.status(400).json({
+                    msg: "El comprobante de envío es obligatorio para envíos por Servientrega."
+                });
+            }
+
+            if (compra.metodoEnvio === "encuentro-publico" && req.file) {
+                return res.status(400).json({
+                    msg: "No debes subir un comprobante de envío para métodos de tipo 'Encuentro Público'."
+                });
+            }
+
+            // Actualizar comprobante y fecha de envío
+            if (compra.metodoEnvio === "servientrega") {
+                compra.comprobanteEnvio = req.file.path;
+                compra.fechaEnvio = new Date(); // Se cambia cuando se marca como enviado
+            }
         }
 
         // Actualizar el estado de la compra
@@ -284,10 +299,18 @@ const actualizarEstadoCompra = async (req, res) => {
 
             // Validar que el cliente exista y tenga token
             if (cliente && cliente.expoPushToken) {
+                let mensajePush = '';
+
+                if (metodoEnvio === "servientrega") {
+                    mensajePush = 'Tu disco de vinilo ya está en camino.';
+                } else if (metodoEnvio === "encuentro-publico") {
+                    mensajePush = 'Tu disco de vinilo se entrego de manera exitosa.';
+                }
+
                 await enviarNotificacionPush(
                     cliente.expoPushToken,
                     'Pedido Enviado',
-                    'Tu vinilo ya está en camino.'
+                    mensajePush
                 );
             }
         }
