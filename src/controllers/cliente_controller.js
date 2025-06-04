@@ -438,6 +438,35 @@ const nuevoPassword = async (req, res) => {
     }
 }
 
+// Actualizacion de notificaciones
+
+const actualizarPushToken = async (req, res) => {
+    const { expoPushToken } = req.body;
+
+    // Validaciones esenciales
+    if (!expoPushToken || typeof expoPushToken !== 'string' || !expoPushToken.startsWith('ExponentPushToken[')) {
+        return res.status(400).json({ msg: 'Token inválido o no proporcionado correctamente' });
+    }
+
+    try {
+        // Opcional: evitar actualizaciones innecesarias
+        const cliente = await Cliente.findById(req.clienteBDD._id);
+        if (!cliente) return res.status(404).json({ msg: 'Cliente no encontrado' });
+
+        if (cliente.expoPushToken === expoPushToken) {
+            return res.status(200).json({ msg: 'Token ya actualizado', ok: true });
+        }
+
+        cliente.expoPushToken = expoPushToken;
+        await cliente.save();
+
+        res.status(200).json({ msg: 'Token actualizado correctamente', ok: true });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ msg: 'Hubo un error al intentar guardar el token de notificación' });
+    }
+};
+
 
 export {
     registrarCliente,
@@ -452,5 +481,6 @@ export {
     recuperarPassword,
     comprobarTokenPassword,
     nuevoPassword,
-    actualizarPassword
+    actualizarPassword,
+    actualizarPushToken
 }

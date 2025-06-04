@@ -2,81 +2,11 @@ import mongoose from 'mongoose';
 import Compra from "../models/Compra.js";
 import Carrito from "../models/Carrito.js";
 import Producto from '../models/Producto.js';
+import Cliente from '../models/Cliente.js';
 import { sendNotificacionNuevaCompra, sendNotificacionPedidoEnviado, sendNotificacionCompraRealizadaEncuentro } from "../config/nodemailer.js"
+// Para las notificaciones
+import enviarNotificacionPush from '../helpers/notificacionPush.js';
 
-
-// Obtener historial de compras del cliente
-const listarHistorialCompras = async (req, res) => {
-
-    try {
-        let compras;
-
-        if (req.administradorBDD) {
-            // Si es admin se muestran todas las compras, con info del cliente
-            compras = await Compra.find()
-                .populate("cliente", "nombre email")
-                /*.populate("productos.producto", "nombre precio")*/
-                /*.select("fechaCompra zonaEnvio metodoEnvio total productos cliente estado");*/
-                .select("fechaCompra total estado cliente");
-        } else if (req.clienteBDD) {
-            // Si es el cliente ve sus compras relizadas
-            compras = await Compra.find({ cliente: req.clienteBDD._id })
-                /*.populate("productos.producto", "nombre precio")
-                .select("fechaCompra total productos zonaEnvio metodoEnvio estado");*/
-                .select("fechaCompra total estado")
-        } else {
-            return res.status(403).json({ msg: "Lo sentimos, solo las personas autorizadas pueden acceder a esta información" });
-        }
-
-        if (compras.length === 0) {
-            return res.status(404).json({ msg: "No tienes compras previas." });
-        }
-
-        res.status(200).json(compras);
-    } catch (error) {
-        res.status(500).json({ msg: "Hubo un error al intentar listar la compra. Por favor, inténtalo de nuevo más tarde" });
-    }
-};
-
-const detalleHistorialCompras = async (req, res) => {
-    const { id } = req.params;
-
-    // Verificar si el id es válido
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(404).json({ msg: `Lo sentimos, no existe la compra con ID: ${id}` });
-    }
-
-    try {
-        // Buscar la compra en la base de datos
-        const compra = await Compra.findById(id)
-            .populate("cliente", "nombre email telefono direccion")
-            .populate("productos.producto", "nombre precio descripcion imagen") // si guardas los productos como referencias
-            .select("-updatedAt -__v");
-
-        // Verificar si la compra existe
-        if (!compra) {
-            return res.status(404).json({ msg: `Compra con ID: ${id} no encontrada o ya fue eliminada` });
-        }
-
-        // Se verifica si es admin o no paraver el listado de todas las compras de los clientes
-        if (req.administradorBDD) {
-            // Admin puede ver todo 
-        } else if (req.clienteBDD) {
-            if (compra.cliente._id.toString() !== req.clienteBDD._id.toString()) {
-                return res.status(403).json({ msg: "No tienes permiso para ver esta compra" });
-            }
-        } else {
-            return res.status(403).json({ msg: "Lo sentimos, solo las personas autorizadas pueden acceder a esta información" });
-        }
-
-        // Devolver detalles de la compra
-        res.status(200).json(compra);
-
-    } catch (error) {
-        console.log(error);
-        res.status(500).json({ msg: "Hubo un error al intentar detallar la compra. Por favor, inténtalo de nuevo más tarde" });
-    }
-};
 
 // Finalizar compra: Convertir el carrito en una compra
 // Finalizar compra: Convertir el carrito en una compra
@@ -216,6 +146,79 @@ const finalizarCompra = async (req, res) => {
     }
 };
 
+// Obtener historial de compras del cliente
+const listarHistorialCompras = async (req, res) => {
+
+    try {
+        let compras;
+
+        if (req.administradorBDD) {
+            // Si es admin se muestran todas las compras, con info del cliente
+            compras = await Compra.find()
+                .populate("cliente", "nombre email")
+                /*.populate("productos.producto", "nombre precio")*/
+                /*.select("fechaCompra zonaEnvio metodoEnvio total productos cliente estado");*/
+                .select("fechaCompra total estado cliente");
+        } else if (req.clienteBDD) {
+            // Si es el cliente ve sus compras relizadas
+            compras = await Compra.find({ cliente: req.clienteBDD._id })
+                /*.populate("productos.producto", "nombre precio")
+                .select("fechaCompra total productos zonaEnvio metodoEnvio estado");*/
+                .select("fechaCompra total estado")
+        } else {
+            return res.status(403).json({ msg: "Lo sentimos, solo las personas autorizadas pueden acceder a esta información" });
+        }
+
+        if (compras.length === 0) {
+            return res.status(404).json({ msg: "No tienes compras previas." });
+        }
+
+        res.status(200).json(compras);
+    } catch (error) {
+        res.status(500).json({ msg: "Hubo un error al intentar listar la compra. Por favor, inténtalo de nuevo más tarde" });
+    }
+};
+
+const detalleHistorialCompras = async (req, res) => {
+    const { id } = req.params;
+
+    // Verificar si el id es válido
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(404).json({ msg: `Lo sentimos, no existe la compra con ID: ${id}` });
+    }
+
+    try {
+        // Buscar la compra en la base de datos
+        const compra = await Compra.findById(id)
+            .populate("cliente", "nombre email telefono direccion")
+            .populate("productos.producto", "nombre precio descripcion imagen") // si guardas los productos como referencias
+            .select("-updatedAt -__v");
+
+        // Verificar si la compra existe
+        if (!compra) {
+            return res.status(404).json({ msg: `Compra con ID: ${id} no encontrada o ya fue eliminada` });
+        }
+
+        // Se verifica si es admin o no paraver el listado de todas las compras de los clientes
+        if (req.administradorBDD) {
+            // Admin puede ver todo 
+        } else if (req.clienteBDD) {
+            if (compra.cliente._id.toString() !== req.clienteBDD._id.toString()) {
+                return res.status(403).json({ msg: "No tienes permiso para ver esta compra" });
+            }
+        } else {
+            return res.status(403).json({ msg: "Lo sentimos, solo las personas autorizadas pueden acceder a esta información" });
+        }
+
+        // Devolver detalles de la compra
+        res.status(200).json(compra);
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ msg: "Hubo un error al intentar detallar la compra. Por favor, inténtalo de nuevo más tarde" });
+    }
+};
+
 // Actualizar estado de la compra (solo para el admin)
 const actualizarEstadoCompra = async (req, res) => {
     if (!req.administradorBDD) {
@@ -253,10 +256,11 @@ const actualizarEstadoCompra = async (req, res) => {
 
         await compra.save();
 
-        // Enviar notificación al cliente solo si el estado es 'enviado'
+        // Enviar notificación al correo del cliente solo si el estado es 'enviado'
         if (estado === 'enviado') {
             const clienteEmail = compra.cliente?.email;
             const clienteNombre = compra.cliente?.nombre;
+            const clienteId = compra.cliente?._id;
 
             // Aseguramos tener el método de envío de la compra
             const metodoEnvio = compra.metodoEnvio;
@@ -273,6 +277,18 @@ const actualizarEstadoCompra = async (req, res) => {
                 }
             } else {
                 console.warn("No se encontró email del cliente para enviar notificación.");
+            }
+
+            // Enviar notificación push al movil del cliente
+            const cliente = await Cliente.findById(clienteId); // Importa el modelo Cliente si no lo tienes aquí
+
+            // Validar que el cliente exista y tenga token
+            if (cliente && cliente.expoPushToken) {
+                await enviarNotificacionPush(
+                    cliente.expoPushToken,
+                    'Pedido Enviado',
+                    'Tu vinilo ya está en camino.'
+                );
             }
         }
 

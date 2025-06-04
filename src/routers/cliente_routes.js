@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { storageClientes } from '../config/cloudinary.js'
-import { actualizarCliente, actualizarPassword, comprobarTokenPassword, confirmarEmail, detalleCliente, eliminarCliente, listarClientes, loginCliente, nuevoPassword, perfilCliente, recuperarPassword, reenviarConfirmacionEmail, registrarCliente } from '../controllers/cliente_controller.js';
+import { actualizarCliente, actualizarPassword, actualizarPushToken, comprobarTokenPassword, confirmarEmail, detalleCliente, eliminarCliente, listarClientes, loginCliente, nuevoPassword, perfilCliente, recuperarPassword, reenviarConfirmacionEmail, registrarCliente } from '../controllers/cliente_controller.js';
 import verificarAutenticacion from '../middlewares/autenticacion.js';
 
 const router = Router()
@@ -27,6 +27,9 @@ router.put('/cliente/actualizarpassword', verificarAutenticacion, actualizarPass
 router.post('/cliente/recuperar-password', recuperarPassword)
 router.get('/cliente/recuperar-password/:token', comprobarTokenPassword)
 router.post('/cliente/nuevo-password/:token', nuevoPassword)
+
+// Ruta para actualizar el token de notificación
+router.put('/cliente/actualizar-push-token', verificarAutenticacion, actualizarPushToken);
 
 
 export default router
