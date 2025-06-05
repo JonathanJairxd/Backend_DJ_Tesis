@@ -194,7 +194,7 @@ const listarClientes = async (req, res) => {
     }
 
     try {
-        const clientes = await Cliente.find({ status: true }).select("-createdAt -updatedAt -__v -password -token -confirmarEmail -direccion")
+        const clientes = await Cliente.find().select("-createdAt -updatedAt -__v -password -token -confirmarEmail -direccion")
 
         res.status(200).json(clientes);
     } catch (error) {
@@ -256,14 +256,9 @@ const eliminarCliente = async (req, res) => {
             return res.status(404).json({ msg: `El cliente con ID: ${id} no existe` });
         }
 
-        // Verificar si la cuenta ya ha sido eliminada (status: false)
-        if (cliente.status === false) {
-            return res.status(404).json({ msg: `La cuenta con ID: ${id} ya ha sido eliminada` });
-        }
-
-        // Realizar la eliminación (cambiar el estado a false)
+        // Realizar la eliminación 
         try {
-            await Cliente.findByIdAndUpdate(id, { status: false });
+            await Cliente.findByIdAndDelete(id);
         } catch (error) {
             return res.status(500).json({ msg: "Hubo un error al eliminar la cuenta" });
         }
