@@ -282,10 +282,10 @@ const actualizarEstadoCompra = async (req, res) => {
             if (clienteEmail) {
                 if (metodoEnvio === "servientrega") {
                     // Enviar correo estándar para envío
-                    await sendNotificacionPedidoEnviado(clienteEmail, clienteNombre, compra._id.toString());
+                    await sendNotificacionPedidoEnviado(clienteEmail, clienteNombre, compra.total);
                 } else if (metodoEnvio === "encuentro-publico") {
                     // Enviar correo personalizado para encuentro público
-                    await sendNotificacionCompraRealizadaEncuentro(clienteEmail, clienteNombre, compra._id.toString());
+                    await sendNotificacionCompraRealizadaEncuentro(clienteEmail, clienteNombre, compra.total);
                 } else {
                     console.warn("Método de envío desconocido");
                 }
