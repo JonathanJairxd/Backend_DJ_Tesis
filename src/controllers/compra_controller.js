@@ -158,7 +158,7 @@ const listarHistorialCompras = async (req, res) => {
                 .populate("cliente", "nombre email")
                 /*.populate("productos.producto", "nombre precio")*/
                 /*.select("fechaCompra zonaEnvio metodoEnvio total productos cliente estado");*/
-                .select("fechaCompra total estado cliente");
+                .select("cliente total formaPago fechaCompra estado");
         } else if (req.clienteBDD) {
             // Si es el cliente ve sus compras relizadas
             compras = await Compra.find({ cliente: req.clienteBDD._id })
@@ -191,7 +191,6 @@ const detalleHistorialCompras = async (req, res) => {
         // Buscar la compra en la base de datos
         const compra = await Compra.findById(id)
             .populate("cliente", "nombre email telefono direccion")
-            .populate("productos.producto", "nombre precio descripcion imagen") // si guardas los productos como referencias
             .select("-updatedAt -__v");
 
         // Verificar si la compra existe

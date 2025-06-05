@@ -31,7 +31,7 @@ const registrarProducto = async (req, res) => {
         }
 
         // Generos predefinidos
-        const generosPermitidos = ['Rock', 'Pop', 'Jazz', 'Electrónica', 'Hip-Hop', 'Clásica', 'Otro']
+        const generosPermitidos = ['Electrónica', 'House', 'Tecno', 'Rock', 'Pop', 'Reggae', 'Funk', 'Hip-Hop', 'Latino', 'Otro']
 
         if (!generosPermitidos.includes(genero)) {
             return res.status(400).json({ msg: "Género no válido" });
@@ -160,7 +160,7 @@ const actualizarProducto = async (req, res) => {
         // devuelva la version mas reciente que se actualizo
 
         // Generos predefinidos
-        const generosPermitidos = ['Rock', 'Pop', 'Jazz', 'Electrónica', 'Hip-Hop', 'Clásica', 'Otro']
+        const generosPermitidos = ['Electrónica', 'House', 'Tecno', 'Rock', 'Pop', 'Reggae', 'Funk', 'Hip-Hop', 'Latino', 'Otro']
 
         // Si el género no es válido, responder con error
         if (!generosPermitidos.includes(req.body.genero)) {
