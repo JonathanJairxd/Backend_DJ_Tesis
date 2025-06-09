@@ -30,7 +30,7 @@ const registrarEvento = async (req, res) => {
         const verificarEventoExistente = await Evento.findOne({ nombreEvento });
 
         if (verificarEventoExistente) {
-            return res.status(400).json({ msg: "Lo sentimos, el producto ya se encuentra registrado con el mismo nombre" });
+            return res.status(400).json({ msg: "Lo sentimos, el evento ya se encuentra registrado con el mismo nombre" });
         }
 
 

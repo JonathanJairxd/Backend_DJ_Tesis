@@ -4,11 +4,11 @@ dotenv.config()
 
 let transporter = nodemailer.createTransport({
     service: 'gmail',
-    host: process.env.HOST_MAILTRAP,
-    port: process.env.PORT_MAILTRAP,
+    host: process.env.HOST_SMTP,
+    port: process.env.PORT_SMTP,
     auth: {
-        user: process.env.USER_MAILTRAP,
-        pass: process.env.PASS_MAILTRAP,
+        user: process.env.USER_SMTP,
+        pass: process.env.PASS_SMTP,
     }
 });
 
@@ -18,7 +18,7 @@ const sendMailToRecoveryPassword = async (userMail, token, isAdmin = true) => {
     const url = isAdmin ? "admin/recuperar-password" : "cliente/recuperar-password"
 
     let info = await transporter.sendMail({
-        from: 'sistemaGestionDj@gmail.com',
+        from: `"Sistema de Edwin DJ 🎵" <${process.env.USER_SMTP}>`,
         to: userMail,
         subject: "Recuperación de contraseña - Sistema de Edwin DJ",
         html: `
@@ -41,7 +41,7 @@ const sendMailToCliente = async (userMail, token) => {
     console.log("Correo a enviar: " ,userMail)
 
     let info = await transporter.sendMail({
-        from: 'sistemaGestionDj@gmail.com',
+        from: `"Sistema de Edwin DJ 🎵" <${process.env.USER_SMTP}>`,
         to: userMail,
         subject: "Confirmación de Cuenta - Sistema de Edwin DJ",
         html: `
@@ -61,7 +61,7 @@ const sendMailToCliente = async (userMail, token) => {
 const sendNotificacionNuevaCompra = async (adminEmail, clienteNombre, total, metodoEnvio) => {
     try {
         await transporter.sendMail({
-            from: 'sistemaGestionDj@gmail.com',
+            from: `"Sistema de Edwin DJ 🎵" <${process.env.USER_SMTP}>`,
             to: adminEmail,
             subject: "🎉 Nueva compra realizada",
             html: `
@@ -74,6 +74,7 @@ const sendNotificacionNuevaCompra = async (adminEmail, clienteNombre, total, met
                         ? "Servientrega (transferencia)" 
                         : "Encuentro Público (efectivo)"
                 }</p>
+                <a href="${process.env.URL_FRONTEND}login" class="button"">Ir a Login</a>
                 <hr />
                 <p>Sistema de Edwin DJ - Notificación automática</p>
             `,
@@ -89,7 +90,7 @@ const sendNotificacionNuevaCompra = async (adminEmail, clienteNombre, total, met
 const sendNotificacionPedidoEnviado = async (clienteEmail, nombreCliente, total) => {
     try {
         await transporter.sendMail({
-            from: 'sistemaGestionDj@gmail.com',
+            from: `"Sistema de Edwin DJ 🎵" <${process.env.USER_SMTP}>`,
             to: clienteEmail,
             subject: "📦 Tu pedido ha sido enviado",
             html: `
@@ -113,7 +114,7 @@ const sendNotificacionPedidoEnviado = async (clienteEmail, nombreCliente, total)
 const sendNotificacionCompraRealizadaEncuentro = async (clienteEmail, nombreCliente, total) => {
     try {
         await transporter.sendMail({
-            from: 'sistemaGestionDj@gmail.com',
+            from: `"Sistema de Edwin DJ 🎵" <${process.env.USER_SMTP}>`,
             to: clienteEmail,
             subject: "🤝 Tu compra ha sido entregada ",
             html: `
