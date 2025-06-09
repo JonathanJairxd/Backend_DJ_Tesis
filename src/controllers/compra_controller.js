@@ -11,6 +11,15 @@ import enviarNotificacionPush from '../helpers/notificacionPush.js';
 // Finalizar compra: Convertir el carrito en una compra
 // Finalizar compra: Convertir el carrito en una compra
 const finalizarCompra = async (req, res) => {
+
+    // Se verifica que se haya enviado algun dato
+    if (!req.body || Object.values(req.body).every(valor =>
+        valor === null || valor === undefined ||
+        (typeof valor === 'string' && valor.trim() === '')
+    )) {
+        return res.status(400).json({ msg: "Datos inválidos. Asegúrate de enviar todos los campos requeridos." });
+    }
+
     try {
         if (!req.clienteBDD) {
             return res.status(403).json({ msg: "Acceso denegado. Solo los clientes pueden realizar compras." });
@@ -142,7 +151,7 @@ const finalizarCompra = async (req, res) => {
         res.status(200).json({ msg: "Compra realizada con éxito", compra: nuevaCompra });
 
     } catch (error) {
-        res.status(400).json({ msg: "Hubo un error al intentar finalizar la compra. Por favor, inténtalo de nuevo más tarde" });
+        res.status(500).json({ msg: "Hubo un error al intentar finalizar la compra. Por favor, inténtalo de nuevo más tarde" });
     }
 };
 
@@ -220,8 +229,17 @@ const detalleHistorialCompras = async (req, res) => {
 
 // Actualizar estado de la compra (solo para el admin)
 const actualizarEstadoCompra = async (req, res) => {
+    
     if (!req.administradorBDD) {
         return res.status(403).json({ msg: "Acceso denegado. Solo el administrador puede actualizar el estado de la compra." });
+    }
+    
+    // Se verifica que se haya enviado algun dato
+    if (!req.body || Object.values(req.body).every(valor =>
+        valor === null || valor === undefined ||
+        (typeof valor === 'string' && valor.trim() === '')
+    )) {
+        return res.status(400).json({ msg: "Datos inválidos. Asegúrate de enviar todos los campos requeridos." });
     }
 
     try {
@@ -318,7 +336,7 @@ const actualizarEstadoCompra = async (req, res) => {
 
     } catch (error) {
         console.log(error)
-        res.status(400).json({ msg: "Hubo un error al intentar actualizar el estado de una compra. Por favor, inténtalo de nuevo más tarde" });
+        res.status(500).json({ msg: "Hubo un error al intentar actualizar el estado de una compra. Por favor, inténtalo de nuevo más tarde" });
     }
 
 };
