@@ -134,6 +134,11 @@ const actualizarProducto = async (req, res) => {
         return res.status(403).json({ msg: "Acceso denegado. Solo el administrador puede actualizar productos" });
     }
 
+    // Verificar que se hayan enviado datos
+    if (!req.body || Object.keys(req.body).length === 0) {
+        return res.status(400).json({ msg: "Datos inválidos. Asegúrate de enviar todos los campos requeridos" });
+    }
+
     const { id } = req.params
 
     if (req.body && Object.values(req.body).includes("")) {

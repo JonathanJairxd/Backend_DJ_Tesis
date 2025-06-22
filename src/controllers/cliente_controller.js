@@ -463,6 +463,11 @@ const nuevoPassword = async (req, res) => {
 
 // Actualizar el token de notificación push para la app movil(Expo Push Token)
 const actualizarPushToken = async (req, res) => {
+    // Verificar que se hayan enviado datos
+    if (!req.body || Object.keys(req.body).length === 0) {
+        return res.status(400).json({ msg: "Datos inválidos. Asegúrate de enviar todos los campos requeridos" });
+    }
+    
     const { expoPushToken } = req.body;
 
     // Validaciones esenciales
