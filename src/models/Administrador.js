@@ -1,11 +1,11 @@
-import {Schema, model} from 'mongoose'
-import bcrypt from "bcryptjs"
+import {Schema, model} from 'mongoose';
+import bcrypt from "bcryptjs";
 
 const administradorSchema = new Schema({
     nombre:{
         type:String,
         require:true,
-        trim:true
+        trim:true // elimina espacios innecesarios
     },
     apellido:{
         type:String,
@@ -15,7 +15,7 @@ const administradorSchema = new Schema({
     direccion:{
         type:String,
         trim:true,
-        default:null
+        default:null 
     },
     telefono:{
         type:Number,
@@ -26,7 +26,7 @@ const administradorSchema = new Schema({
         type:String,
         require:true,
         trim:true,
-				unique:true
+		unique:true // debe ser unico
     },
     password:{
         type:String,
@@ -35,7 +35,7 @@ const administradorSchema = new Schema({
     descripcion: {
         type: String,
         trim: true,
-        default: null  // vacio si es que no se desea agregar info
+        default: null   
     },
     status:{
         type:Boolean,
@@ -47,7 +47,7 @@ const administradorSchema = new Schema({
     },
 
 }, {
-    timestamps:true
+    timestamps:true  // Crea createdAt y updatedAt de forma automática
 })
 
 // Método para cifrar el password del administrador
@@ -69,4 +69,5 @@ administradorSchema.methods.crearToken = function(){
     return tokenGenerado
 }
 
+// Se exporta el modelo
 export default model('Administrador',administradorSchema)

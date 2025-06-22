@@ -7,6 +7,14 @@ const registrarEvento = async (req, res) => {
         return res.status(403).json({ msg: "Acceso denegado. Solo el administrador puede registrar eventos" });
     }
 
+    // Verificar que se hayan enviado datos
+    if (!req.body || Object.values(req.body).some(valor =>
+        valor === null || valor === undefined ||
+        (typeof valor === 'string' && valor.trim() === '')
+    )) {
+        return res.status(400).json({ msg: "Datos inválidos. Asegúrate de enviar todos los campos requeridos" });
+    }
+
     try {
 
         const { nombreEvento, fechaEvento } = req.body;
@@ -17,7 +25,7 @@ const registrarEvento = async (req, res) => {
         }
 
         if (!nombreEvento || !fechaEvento) {
-            return res.status(400).json({ msg: "Todos los campos son obligatorios" });
+            return res.status(400).json({ msg: "Lo sentimos, debes llenar todos los campos"  });
         }
 
         // Validar el formato de la fecha (YYYY-MM-DD)
@@ -42,11 +50,11 @@ const registrarEvento = async (req, res) => {
 
         await nuevoEvento.save();
 
-        res.status(201).json({ msg: "Evento registrado con éxito." });
+        res.status(200).json({ msg: "Evento registrado con éxito" });
     } catch (error) {
         res.status(500).json({ msg: "Hubo un error al intentar registrar el evento. Por favor, inténtalo de nuevo más tarde" });
     }
-};
+}
 
 // Listar todos los eventos 
 const listarEventos = async (req, res) => {
@@ -62,7 +70,7 @@ const listarEventos = async (req, res) => {
     } catch (error) {
         res.status(500).json({ msg: "Hubo un error al intentar listar los eventos. Por favor, inténtalo de nuevo más tarde" });
     }
-};
+}
 
 // Detallar un evento 
 const detalleEvento = async (req, res) => {
@@ -83,21 +91,25 @@ const detalleEvento = async (req, res) => {
 
         // Verificar si el evento fue encontrado
         if (!evento) {
-            return res.status(404).json({ msg: `Evento con ID: ${id} no encontrado o ya fue eliminado` });
+            return res.status(404).json({ msg: `Evento no encontrado o ya fue eliminado` });
         }
 
         res.status(200).json(evento);
 
     } catch (error) {
-        res.status(400).json({ msg: "Hubo un error al intentar detallar un evento. Por favor, inténtalo de nuevo más tarde" });
+        res.status(500).json({ msg: "Hubo un error al intentar detallar un evento. Por favor, inténtalo de nuevo más tarde" });
     }
-};
-
+}
 
 // Actualizar evento
 const actualizarEvento = async (req, res) => {
     if (!req.administradorBDD) {
         return res.status(403).json({ msg: "Acceso denegado. Solo el administrador puede actualizar eventos" });
+    }
+
+    // Verificar que se hayan enviado datos
+    if (!req.body || Object.keys(req.body).length === 0) {
+        return res.status(400).json({ msg: "Datos inválidos. Asegúrate de enviar todos los campos requeridos" });
     }
 
     try {
@@ -110,13 +122,13 @@ const actualizarEvento = async (req, res) => {
         }
         // Verificar si el ID es válido
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ msg: "ID de evento inválido" });
+            return res.status(400).json({ msg: `Lo sentimos, no existe el evento con ID: ${id}` });
         }
 
         // Verificar si el evento existe
         const evento = await Evento.findById(id);
         if (!evento) {
-            return res.status(404).json({ msg: `Evento con ID: ${id} no encontrado o eliminado` });
+            return res.status(404).json({ msg: `Evento no encontrado o eliminado` });
         }
 
         // Validar el formato de la fecha (YYYY-MM-DD)
@@ -130,11 +142,9 @@ const actualizarEvento = async (req, res) => {
             evento.imagenEvento = req.file.path;
         }
 
-        // Actualizar campos
         evento.nombreEvento = nombreEvento;
         evento.fechaEvento = fechaEvento;
 
-        // Guardar cambios
         await evento.save();
 
         res.status(200).json({ msg: "Evento actualizado con éxito" });
@@ -142,7 +152,7 @@ const actualizarEvento = async (req, res) => {
     } catch (error) {
         res.status(500).json({ msg: "Hubo un error al intentar actualizar el evento. Por favor, inténtalo de nuevo más tarde" });
     }
-};
+}
 
 // Eliminar evento 
 const eliminarEvento = async (req, res) => {
@@ -153,7 +163,7 @@ const eliminarEvento = async (req, res) => {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ msg: "ID de evento inválido" });
+        return res.status(400).json({ msg: `Lo sentimos, no existe el evento con ID: ${id}`});
     }
 
     try {
@@ -167,7 +177,7 @@ const eliminarEvento = async (req, res) => {
     } catch (error) {
         res.status(500).json({ msg: "Hubo un error al intentar eliminar el evento. Por favor, inténtalo de nuevo más tarde" });
     }
-};
+}
 
 export {
     registrarEvento,
@@ -175,4 +185,4 @@ export {
     detalleEvento,
     actualizarEvento,
     eliminarEvento
-};
+}

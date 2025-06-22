@@ -33,4 +33,5 @@ const productoSchema = new Schema({
     timestamps: true
 })
 
+// Se exporta el modelo
 export default model('Producto', productoSchema)

@@ -2,7 +2,7 @@ import { Schema, model } from 'mongoose';
 
 const carritoSchema = new Schema({
   cliente: {
-    type: Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId, // Cliente asociado al carrito
     ref: 'Cliente',
     required: true,
   },
@@ -29,4 +29,5 @@ const carritoSchema = new Schema({
   timestamps: true
 });
 
+// Se exporta el modelo
 export default model('Carrito', carritoSchema);

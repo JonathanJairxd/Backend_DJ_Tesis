@@ -1,11 +1,11 @@
-import { Schema, model } from 'mongoose'
-import bcrypt from "bcryptjs"
+import { Schema, model } from 'mongoose';
+import bcrypt from "bcryptjs";
 
 const clienteSchema = new Schema({
     nombre: {
         type: String,
         required: true,
-        trim: true
+        trim: true // elimina espacios innecesarios
     },
     email: {
         type: String,
@@ -54,7 +54,7 @@ const clienteSchema = new Schema({
         type: Boolean,
         default: false
     },
-    expoPushToken: { // Campo para guardar el token de las notificaciones
+    expoPushToken: { // Campo para guardar el token de las notificaciones para la app móvil
         type: String,
         default: null,
     }
@@ -80,4 +80,5 @@ clienteSchema.methods.crearToken = function () {
     return tokenGenerado
 }
 
+// Se exporta el modelo
 export default model('Cliente', clienteSchema)

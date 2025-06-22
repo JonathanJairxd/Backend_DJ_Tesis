@@ -1,37 +1,40 @@
-import Producto from "../models/Producto.js"
-import mongoose from "mongoose"
+import Producto from "../models/Producto.js";
+import mongoose from "mongoose";
 
+// Registrar un producto
 const registrarProducto = async (req, res) => {
-
-    // Verificar que el cliente con el id del token exista en la base de datos
-    // Se usa tambien para verificar el token de acuerdo al rol que le es permitido
     if (!req.administradorBDD) {
-        return res.status(404).json({ msg: "Acceso denegado. Solo el administrador puede registrar productos" });
+        return res.status(403).json({ msg: "Acceso denegado. Solo el administrador puede registrar productos" });
+    }
+
+    // Verificar que se hayan enviado datos
+    if (!req.body || Object.keys(req.body).length === 0) {
+        return res.status(400).json({ msg: "Datos inválidos. Asegúrate de enviar todos los campos requeridos" });
     }
 
     try {
 
-        const { nombreDisco, artista, precio, genero, generoPersonalizado, stock } = req.body
+        const { nombreDisco, artista, precio, genero, generoPersonalizado, stock } = req.body;
 
         //Para que se pueda pedir la imagen
-        const imagen = req.file?.path
+        const imagen = req.file?.path;
 
         if (!imagen) {
-            return res.status(400).json({ msg: "La imagen es obligatoria" })
+            return res.status(400).json({ msg: "La imagen es obligatoria" });
         }
 
-        // Validar que no haya campos vacios
-        if (Object.values(req.body).includes("")) {
-            return res.status(400).json({ msg: "Lo sentimos, debes llenar todos los campos" })
+        // Verificar que todos los campos estén llenos
+        if (Object.values(req.body).some(valor => typeof valor === 'string' && valor.trim() === "")) {
+            return res.status(400).json({ msg: "Lo sentimos, debes llenar todos los campos" });
         }
 
         // Validar que el precio y el stock sean numeros validos
         if (isNaN(precio) || isNaN(stock)) {
-            return res.status(400).json({ msg: "El precio y el stock deben ser números válidos" })
+            return res.status(400).json({ msg: "El precio y el stock deben ser números válidos" });
         }
 
         // Generos predefinidos
-        const generosPermitidos = ['Electrónica', 'House', 'Tecno', 'Rock', 'Pop', 'Raggae', 'Funk', 'Hip-Hop', 'Latino', 'Otro']
+        const generosPermitidos = ['Electrónica', 'House', 'Tecno', 'Rock', 'Pop', 'Raggae', 'Funk', 'Hip-Hop', 'Latino', 'Otro'];
 
         if (!generosPermitidos.includes(genero)) {
             return res.status(400).json({ msg: "Género no válido" });
@@ -47,9 +50,9 @@ const registrarProducto = async (req, res) => {
         }
 
         // Verificar si el producto ya esta registrado en la base de datos
-        const verificarProductoBDD = await Producto.findOne({ nombreDisco })
+        const verificarProductoBDD = await Producto.findOne({ nombreDisco });
         if (verificarProductoBDD) {
-            return res.status(400).json({ msg: "Lo sentimos, el producto ya se encuentra registrado" })
+            return res.status(400).json({ msg: "Lo sentimos, el producto ya se encuentra registrado" });
         }
 
         // Crear el nuevo producto
@@ -62,18 +65,16 @@ const registrarProducto = async (req, res) => {
             imagen
         })
 
-        // Guardar el producto en la base de datos
         await nuevoProducto.save()
-
-        // Se responde con exito y los detalles del producto registrado 
-        res.status(200).json({ msg: "Producto registrado con éxito" })
+        res.status(200).json({ msg: "Producto registrado con éxito" });
 
     } catch (error) {
-        return res.status(400).json({ msg: "Hubo un error al intentar registrar un producto. Por favor, inténtalo de nuevo más tarde" })
+        return res.status(500).json({ msg: "Hubo un error al intentar registrar un producto. Por favor, inténtalo de nuevo más tarde" });
     }
 
 }
 
+// Listar productos (Admin - Cliente)
 const listarProducto = async (req, res) => {
     try {
         if (req.administradorBDD) {
@@ -95,10 +96,11 @@ const listarProducto = async (req, res) => {
         return res.status(401).json({ msg: "Acceso denegado. Debes iniciar sesión como administrador o cliente para ver los productos" });
 
     } catch (error) {
-        res.status(400).json({ msg: "Hubo un error al intentar obtener la lista de productos" })
+        res.status(500).json({ msg: "Hubo un error al intentar obtener la lista de productos" })
     }
 }
 
+// Detallar productos
 const detalleProducto = async (req, res) => {
 
     if (!req.administradorBDD && !req.clienteBDD) {
@@ -117,24 +119,19 @@ const detalleProducto = async (req, res) => {
         // Buscar el producto en la base de datos
         const producto = await Producto.findById(id).select("-createdAt -updatedAt -__v")
 
-        // // Verificar si el producto existe en la base de datos () si se encontro
-        if (!producto) {
-            return res.status(404).json({ msg: `Producto con ID: ${id} no encontrado o ya fue eliminado` })
-        }
-
         // Detalles del producto
         res.status(200).json(producto)
 
     } catch (error) {
-        res.status(400).json({ msg: "Hubo un error al intentar detallar un producto. Por favor, inténtalo de nuevo más tarde" })
+        res.status(500).json({ msg: "Hubo un error al intentar detallar un producto. Por favor, inténtalo de nuevo más tarde" })
     }
 }
 
-
+// Actualizar productos
 const actualizarProducto = async (req, res) => {
 
     if (!req.administradorBDD) {
-        return res.status(404).json({ msg: "Acceso denegado. Solo el administrador puede actualizar productos" });
+        return res.status(403).json({ msg: "Acceso denegado. Solo el administrador puede actualizar productos" });
     }
 
     const { id } = req.params
@@ -160,7 +157,7 @@ const actualizarProducto = async (req, res) => {
         // devuelva la version mas reciente que se actualizo
 
         // Generos predefinidos
-        const generosPermitidos = ['Electrónica', 'House', 'Tecno', 'Rock', 'Pop', 'Reggae', 'Funk', 'Hip-Hop', 'Latino', 'Otro']
+        const generosPermitidos = ['Electrónica', 'House', 'Tecno', 'Rock', 'Pop', 'Raggae', 'Funk', 'Hip-Hop', 'Latino', 'Otro']
 
         // Si el género no es válido, responder con error
         if (!generosPermitidos.includes(req.body.genero)) {
@@ -187,15 +184,16 @@ const actualizarProducto = async (req, res) => {
         res.status(200).json({ msg: "Producto actualizado con éxito" })
 
     } catch (error) {
-        return res.status(400).json({ msg: "Hubo un error al intentar actualizar la info de un producto. Por favor, inténtalo de nuevo más tarde" });
+        return res.status(500).json({ msg: "Hubo un error al intentar actualizar la info de un producto. Por favor, inténtalo de nuevo más tarde" });
     }
 
 }
 
+// Eliminar productos
 const eliminarProducto = async (req, res) => {
 
     if (!req.administradorBDD) {
-        return res.status(404).json({ msg: "Acceso denegado. Solo el administrador puede eliminar productos" });
+        return res.status(403).json({ msg: "Acceso denegado. Solo el administrador puede eliminar productos" });
     }
 
     try {
@@ -219,7 +217,7 @@ const eliminarProducto = async (req, res) => {
         res.status(200).json({ msg: "Producto eliminado exitosamente" })
 
     } catch (error) {
-        res.status(400).json({ msg: "Hubo un error al intentar eliminar un producto. Por favor, inténtalo de nuevo más tarde" })
+        res.status(500).json({ msg: "Hubo un error al intentar eliminar un producto. Por favor, inténtalo de nuevo más tarde" })
     }
 
 }

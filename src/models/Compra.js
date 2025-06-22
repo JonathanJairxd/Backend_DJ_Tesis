@@ -77,7 +77,7 @@ const compraSchema = new mongoose.Schema({
     required: true,
   },
   comprobanteEnvio: {
-    type: String, // Se guardara la ruta de la imagen del comrpobante del envio
+    type: String, // Se guarda la ruta de la imagen del comprobante del envio
     default: null,
   },
   fechaCompra: {
@@ -90,4 +90,5 @@ const compraSchema = new mongoose.Schema({
   }
 });
 
+// Se exporta el modelo
 export default mongoose.model("Compra", compraSchema);

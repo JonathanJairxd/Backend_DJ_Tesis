@@ -7,11 +7,11 @@ const eventoSchema = new Schema({
         trim: true
     },
     fechaEvento: {
-        type: Date,  // Usamos tipo Date para mejor manejo
+        type: Date,  
         required: true
     },
     imagenEvento: {
-        type: String,  // Aquí va la ruta o URL de la imagen subida
+        type: String,  // Se guarda la url de la imagen
         required: true
     }
 }, {
