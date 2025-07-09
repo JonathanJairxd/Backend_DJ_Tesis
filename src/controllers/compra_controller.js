@@ -172,7 +172,7 @@ const listarHistorialCompras = async (req, res) => {
             // Si es admin se muestran todas las compras, con info del cliente
             compras = await Compra.find()
                 .populate("cliente", "nombre email")
-                .select("cliente total formaPago fechaCompra estado");
+                .select("cliente nombreCliente total formaPago fechaCompra estado");
         } else if (req.clienteBDD) {
             // Si es el cliente ve sus compras relizadas
             compras = await Compra.find({ cliente: req.clienteBDD._id })
